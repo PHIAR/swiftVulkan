@@ -1,0 +1,7 @@
+module vulkan {
+    umbrella header "vulkan.h"
+    module * { export * }
+    export *
+    link "vulkan"
+}
+

@@ -213,7 +213,7 @@ public final class VulkanDevice {
                                 surfaceFormat: VkSurfaceFormatKHR,
                                 surfaceCapabilities: VkSurfaceCapabilitiesKHR,
                                 presentMode: VkPresentModeKHR) -> VulkanSwapchain {
-        let swapchainImageCount = surfaceCapabilities.maxImageCount
+        let swapchainImageCount = surfaceCapabilities.minImageCount
         let swapchainExtent = surfaceCapabilities.currentExtent
         let swapchainImageFormat = (surfaceFormat.format == VK_FORMAT_UNDEFINED) ? VK_FORMAT_B8G8R8A8_UNORM :
                                                                                    surfaceFormat.format
@@ -242,6 +242,14 @@ public final class VulkanDevice {
 
         return VulkanSwapchain(device: self.device,
                                swapchain: swapchain!)
+    }
+
+    public func getDeviceQueue(queueFamily: Int,
+                               queue: Int) -> VulkanQueue {
+        var _queue: VkQueue? = nil
+
+        vkGetDeviceQueue(self.device, UInt32(queueFamily), UInt32(queue), &_queue)
+        return VulkanQueue(queue: _queue!)
     }
 
     public func resetFences(fences: [VulkanFence]) {
@@ -321,8 +329,8 @@ public final class VulkanImage {
 public class VulkanImageMemoryBarrier: VulkanMemoryBarrier {
     public var oldLayout: VkImageLayout
     public var newLayout: VkImageLayout
-    public var srcQueueFamilyIndex: UInt32
-    public var dstQueueFamilyIndex: UInt32
+    public var srcQueueFamilyIndex: Int
+    public var dstQueueFamilyIndex: Int
     public var image: VulkanImage
     public var subresourceRange: VkImageSubresourceRange
 
@@ -330,8 +338,8 @@ public class VulkanImageMemoryBarrier: VulkanMemoryBarrier {
                 dstAccessMask: VkAccessFlags,
                 oldLayout: VkImageLayout,
                 newLayout: VkImageLayout,
-                srcQueueFamilyIndex: UInt32,
-                dstQueueFamilyIndex: UInt32,
+                srcQueueFamilyIndex: Int,
+                dstQueueFamilyIndex: Int,
                 image: VulkanImage,
                 subresourceRange: VkImageSubresourceRange) {
         self.oldLayout = oldLayout
@@ -347,13 +355,13 @@ public class VulkanImageMemoryBarrier: VulkanMemoryBarrier {
     public func getImageMemoryBarrier() -> VkImageMemoryBarrier {
         var imageMemoryBarrier = VkImageMemoryBarrier()
 
-        imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER
+        imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER
         imageMemoryBarrier.srcAccessMask = self.srcAccessMask
         imageMemoryBarrier.dstAccessMask = self.dstAccessMask
         imageMemoryBarrier.oldLayout = self.oldLayout
         imageMemoryBarrier.newLayout = self.newLayout
-        imageMemoryBarrier.srcQueueFamilyIndex = self.srcQueueFamilyIndex
-        imageMemoryBarrier.dstQueueFamilyIndex = self.dstQueueFamilyIndex
+        imageMemoryBarrier.srcQueueFamilyIndex = UInt32(self.srcQueueFamilyIndex)
+        imageMemoryBarrier.dstQueueFamilyIndex = UInt32(self.dstQueueFamilyIndex)
         imageMemoryBarrier.image = self.image.getImage()
         imageMemoryBarrier.subresourceRange = self.subresourceRange
         return imageMemoryBarrier
@@ -416,23 +424,24 @@ public final class VulkanQueue {
         self.queue = queue
     }
 
-    public func present(semaphores: [VulkanSemaphore],
+    public func present(waitSemaphores: [VulkanSemaphore],
                         swapchains: [VulkanSwapchain],
                         imageIndices: [Int]) {
-        let waitSemaphores = semaphores.map { $0.getSemaphore() }
+        let semaphores = waitSemaphores.map { $0.getSemaphore() }
         let presentSwapchains = swapchains.map { $0.getSwapchain() }
-        let _imageIndices = imageIndices.map { UInt32($0) }
-        let _ = waitSemaphores.withUnsafeBytes { _semaphores in
+        let presentImageIndices = imageIndices.map { UInt32($0) }
+        let _ = semaphores.withUnsafeBytes { _waitSemaphores in
             let _ = presentSwapchains.withUnsafeBytes { _swapchains in
-                let _ = _imageIndices.withUnsafeBytes {
+                let _ = presentImageIndices.withUnsafeBytes { _imageIndices in
+
                     var presentInfo = VkPresentInfoKHR()
 
                     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR
-                    presentInfo.waitSemaphoreCount = UInt32(semaphores.count)
-                    presentInfo.pWaitSemaphores = _semaphores.baseAddress!.assumingMemoryBound(to: VkSemaphore?.self)
-                    presentInfo.swapchainCount = UInt32(presentSwapchains.count)
+                    presentInfo.waitSemaphoreCount = UInt32(waitSemaphores.count)
+                    presentInfo.pWaitSemaphores = _waitSemaphores.baseAddress!.assumingMemoryBound(to: VkSemaphore?.self)
+                    presentInfo.swapchainCount = UInt32(swapchains.count)
                     presentInfo.pSwapchains = _swapchains.baseAddress!.assumingMemoryBound(to: VkSwapchainKHR?.self)
-                    presentInfo.pImageIndices = $0.baseAddress!.assumingMemoryBound(to: UInt32.self)
+                    presentInfo.pImageIndices = _imageIndices.baseAddress!.assumingMemoryBound(to: UInt32.self)
 
                     guard vkQueuePresentKHR(self.queue, &presentInfo) == VK_SUCCESS else {
                         preconditionFailure()
@@ -443,9 +452,9 @@ public final class VulkanQueue {
     }
 
     public func submit(waitSemaphores: [VulkanSemaphore],
+                       waitDstStageMask: [VkPipelineStageFlags],
                        commandBuffers: [VulkanCommandBuffer],
                        signalSemaphores: [VulkanSemaphore],
-                       waitDstStageMask: [VkPipelineStageFlags],
                        fence: VulkanFence? = nil) {
         let submitWaitSemaphores = waitSemaphores.map { $0.getSemaphore() }
         let submitCommandBuffers = commandBuffers.map { $0.getCommandBuffer() }

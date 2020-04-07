@@ -1,4 +1,5 @@
 import vulkan
+import Foundation
 
 public class VulkanBufferMemoryBarrier: VulkanMemoryBarrier {
     public var srcQueueFamilyIndex: UInt32
@@ -59,6 +60,25 @@ public final class VulkanCommandBuffer {
         }
     }
 
+    public func beginRenderPass(_ renderPass: VulkanRenderPass,
+                                  framebuffer: VulkanFramebuffer,
+                                  renderArea: VkRect2D,
+                                  clearValues: [VkClearValue],
+                                  contents: VkSubpassContents) {
+        clearValues.withUnsafeBytes { _clearValues in
+            var renderPassBeginInfo = VkRenderPassBeginInfo()
+
+            renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO
+            renderPassBeginInfo.renderPass = renderPass.getRenderPass()
+            renderPassBeginInfo.framebuffer = framebuffer.getFramebuffer()
+            renderPassBeginInfo.clearValueCount = UInt32(clearValues.count)
+            renderPassBeginInfo.pClearValues = _clearValues.baseAddress!.assumingMemoryBound(to: VkClearValue.self)
+            renderPassBeginInfo.renderArea = renderArea
+
+            vkCmdBeginRenderPass(self.commandBuffer, &renderPassBeginInfo, contents)
+        }
+    }
+
     public func clearColor(image: VulkanImage,
                            imageLayout: VkImageLayout,
                            color: VkClearColorValue,
@@ -80,6 +100,10 @@ public final class VulkanCommandBuffer {
         guard vkEndCommandBuffer(self.commandBuffer) == VK_SUCCESS else {
             preconditionFailure()
         }
+    }
+
+    public func endRenderPass() {
+        vkCmdEndRenderPass(self.commandBuffer)
     }
 
     public func getCommandBuffer() -> VkCommandBuffer {
@@ -194,6 +218,83 @@ public final class VulkanDevice {
                            fence: fence!)
     }
 
+    public func createFramebuffer(renderPass: VulkanRenderPass,
+                                  imageViews: [VulkanImageView],
+                                  width: Int,
+                                  height: Int,
+                                  layers: Int = 1) -> VulkanFramebuffer {
+        var framebuffer: VkFramebuffer? = nil
+
+        imageViews.withUnsafeBytes { _imageViews in
+            var framebufferCreateInfo = VkFramebufferCreateInfo()
+
+            framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO
+            framebufferCreateInfo.renderPass = renderPass.getRenderPass()
+            framebufferCreateInfo.attachmentCount = UInt32(imageViews.count)
+            framebufferCreateInfo.pAttachments = _imageViews.baseAddress!.assumingMemoryBound(to: VkImageView?.self)
+            framebufferCreateInfo.width = UInt32(width)
+            framebufferCreateInfo.height = UInt32(height)
+            framebufferCreateInfo.layers = UInt32(layers)
+
+            guard vkCreateFramebuffer(self.device, &framebufferCreateInfo, nil, &framebuffer) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+        }
+
+        return VulkanFramebuffer(device: self.device,
+                                 framebuffer: framebuffer!)
+    }
+
+    public func createImageView(image: VulkanImage,
+                                viewType: VkImageViewType,
+                                format: VkFormat,
+                                subresourceRange: VkImageSubresourceRange) -> VulkanImageView {
+        var imageView: VkImageView? = nil
+        var imageCreateInfo = VkImageViewCreateInfo()
+
+        imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO
+        imageCreateInfo.image = image.getImage()
+        imageCreateInfo.viewType = viewType
+        imageCreateInfo.format = format
+        imageCreateInfo.subresourceRange = subresourceRange
+
+        guard vkCreateImageView(self.device, &imageCreateInfo, nil, &imageView) == VK_SUCCESS else {
+            preconditionFailure()
+        }
+
+        return VulkanImageView(device: self.device,
+                               imageView: imageView!)
+    }
+
+    public func createRenderPass(attachments: [VkAttachmentDescription],
+                                subpasses: [VkSubpassDescription],
+                                dependencies: [VkSubpassDependency]) -> VulkanRenderPass {
+        var renderPass: VkRenderPass? = nil
+
+        attachments.withUnsafeBytes { _attachments in
+            subpasses.withUnsafeBytes { _subpasses in
+                dependencies.withUnsafeBytes { _dependencies in
+                    var renderPassCreateInfo = VkRenderPassCreateInfo()
+
+                    renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO
+                    renderPassCreateInfo.attachmentCount = UInt32(attachments.count)
+                    renderPassCreateInfo.pAttachments = _attachments.baseAddress!.assumingMemoryBound(to: VkAttachmentDescription.self)
+                    renderPassCreateInfo.subpassCount = UInt32(subpasses.count)
+                    renderPassCreateInfo.pSubpasses = _subpasses.baseAddress!.assumingMemoryBound(to: VkSubpassDescription.self)
+                    renderPassCreateInfo.dependencyCount = UInt32(dependencies.count)
+                    renderPassCreateInfo.pDependencies = _dependencies.baseAddress!.assumingMemoryBound(to: VkSubpassDependency.self)
+
+                    guard vkCreateRenderPass(device, &renderPassCreateInfo, nil, &renderPass) == VK_SUCCESS else {
+                        preconditionFailure()
+                    }
+                }
+            }
+        }
+
+        return VulkanRenderPass(device: self.device,
+                                renderPass: renderPass!)
+    }
+
     public func createSemaphore() -> VulkanSemaphore {
         var semaphoreCreateInfo = VkSemaphoreCreateInfo()
 
@@ -207,6 +308,26 @@ public final class VulkanDevice {
 
         return VulkanSemaphore(device: device,
                                semaphore: semaphore!)
+    }
+
+
+    public func createShaderModule(code: Data) -> VulkanShaderModule {
+        var shaderModule: VkShaderModule? = nil
+
+        code.withUnsafeBytes { _code in
+            var shaderModuleCreateInfo = VkShaderModuleCreateInfo()
+
+            shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO
+            shaderModuleCreateInfo.codeSize = code.count / MemoryLayout <UInt32>.size
+            shaderModuleCreateInfo.pCode = _code.baseAddress!.assumingMemoryBound(to: UInt32.self)
+
+            guard vkCreateShaderModule(self.device, &shaderModuleCreateInfo, nil, &shaderModule) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+        }
+
+        return VulkanShaderModule(device: self.device,
+                                  shaderModule: shaderModule!)
     }
 
     public func createSwapchain(surface: VkSurfaceKHR,
@@ -307,6 +428,25 @@ public final class VulkanFence {
     }
 }
 
+public final class VulkanFramebuffer {
+    private let device: VkDevice
+    private let framebuffer: VkFramebuffer
+
+    public init(device: VkDevice,
+                framebuffer: VkFramebuffer) {
+        self.device = device
+        self.framebuffer = framebuffer
+    }
+
+    deinit {
+        vkDestroyFramebuffer(self.device, self.framebuffer, nil)
+    }
+
+    public func getFramebuffer() -> VkFramebuffer {
+        return self.framebuffer
+    }
+}
+
 public final class VulkanImage {
     private let device: VkDevice
     private let image: VkImage
@@ -365,6 +505,25 @@ public class VulkanImageMemoryBarrier: VulkanMemoryBarrier {
         imageMemoryBarrier.image = self.image.getImage()
         imageMemoryBarrier.subresourceRange = self.subresourceRange
         return imageMemoryBarrier
+    }
+}
+
+public final class VulkanImageView {
+    private let device: VkDevice
+    private let imageView: VkImageView
+
+    public init(device: VkDevice,
+                imageView: VkImageView) {
+        self.device = device
+        self.imageView = imageView
+    }
+
+    deinit {
+        vkDestroyImageView(self.device, self.imageView, nil)
+    }
+
+    public func getImageView() -> VkImageView {
+        return self.imageView
     }
 }
 
@@ -623,6 +782,44 @@ public final class VulkanPhysicalDevice {
     }
 }
 
+public final class VulkanPipeline {
+    private let device: VkDevice
+    private let pipeline: VkPipeline
+
+    public init(device: VkDevice,
+                pipeline: VkPipeline) {
+        self.device = device
+        self.pipeline = pipeline
+    }
+
+    deinit {
+        vkDestroyPipeline(self.device, self.pipeline, nil)
+    }
+
+    public func getPipeline() -> VkPipeline {
+        return self.pipeline
+    }
+}
+
+public final class VulkanRenderPass {
+    private let device: VkDevice
+    private let renderPass: VkRenderPass
+
+    public init(device: VkDevice,
+                renderPass: VkRenderPass) {
+        self.device = device
+        self.renderPass = renderPass
+    }
+
+    deinit {
+        vkDestroyRenderPass(self.device, self.renderPass, nil)
+    }
+
+    func getRenderPass() -> VkRenderPass {
+        return self.renderPass
+    }
+}
+
 public final class VulkanSemaphore {
     private let device: VkDevice
     private let semaphore: VkSemaphore
@@ -639,6 +836,25 @@ public final class VulkanSemaphore {
 
     public func getSemaphore() -> VkSemaphore {
         return self.semaphore
+    }
+}
+
+public final class VulkanShaderModule {
+    private let device: VkDevice
+    private let shaderModule: VkShaderModule
+
+    public init(device: VkDevice,
+                shaderModule: VkShaderModule) {
+        self.device = device
+        self.shaderModule = shaderModule
+    }
+
+    deinit {
+        vkDestroyShaderModule(self.device, self.shaderModule, nil)
+    }
+
+    public func getShaderModule() -> VkShaderModule {
+        return self.shaderModule
     }
 }
 

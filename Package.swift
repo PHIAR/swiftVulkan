@@ -10,6 +10,8 @@ let package = Package(
                  targets: [
             "swiftVulkan",
         ]),
+        .library(name: "vulkan",
+                 targets: ["vulkan"]),
     ],
     dependencies: [
     ],

@@ -266,6 +266,79 @@ public final class VulkanDevice {
                                imageView: imageView!)
     }
 
+    public func createGraphicsPipeline(pipelineCache: VulkanPipelineCache? = nil,
+                                       stages: [VulkanPipelineShaderStage],
+                                       vertexInputState: VulkanPipelineVertexInputState,
+                                       inputAssemblyState: VulkanPipelineInputAssemblyState,
+                                       viewportState: VulkanPipelineViewportState,
+                                       rasterizationState: VulkanPipelineRasterizationState,
+                                       multisampleState: VulkanPipelineMultisampleState,
+                                       colorBlendState: VulkanPipelineColorBlendState,
+                                       dynamicState: VulkanPipelineDynamicState,
+                                       pipelineLayout: VulkanPipelineLayout,
+                                       renderPass: VulkanRenderPass,
+                                       subpass: Int = 0,
+                                       basePipelineHandle: VulkanPipeline? = nil,
+                                       basePipelineIndex: Int = 0) -> VulkanPipeline {
+        let _pipelineCache = pipelineCache?.getPipelineCache()
+        let pipelineStages = stages.map { $0.getPipelineShaderStageCreateInfo() }
+        var pipeline: VkPipeline? = nil
+        var _vertexInputState = vertexInputState.getPipelineVertexInputStateCreateInfo()
+        var _inputAssemblyState = inputAssemblyState.getPipelineInputAssemblyStateCreateInfo()
+        var _viewportState = viewportState.getPipelineViewportStateCreateInfo()
+        var _rasterizationState = rasterizationState.getPipelineRasterizationStateCreateInfo()
+        var _multisampleState = multisampleState.getPipelineMultisampleStateCreateInfo()
+        var _colorBlendState = colorBlendState.getPipelineColorBlendStateCreateInfo()
+        var _dynamicState = dynamicState.getPipelineDynamicStateCreateInfo()
+        let addressOf: (UnsafeRawPointer) -> UnsafeRawPointer = { $0 }
+
+        pipelineStages.withUnsafeBytes { _stages in
+            var graphicsPipelineCreateInfo = VkGraphicsPipelineCreateInfo()
+
+            graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO
+            graphicsPipelineCreateInfo.stageCount = UInt32(stages.count)
+            graphicsPipelineCreateInfo.pStages = _stages.baseAddress!.assumingMemoryBound(to: VkPipelineShaderStageCreateInfo.self)
+            graphicsPipelineCreateInfo.pVertexInputState = addressOf(&_vertexInputState).assumingMemoryBound(to: VkPipelineVertexInputStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pInputAssemblyState = addressOf(&_inputAssemblyState).assumingMemoryBound(to: VkPipelineInputAssemblyStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pViewportState = addressOf(&_viewportState).assumingMemoryBound(to: VkPipelineViewportStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pRasterizationState = addressOf(&_rasterizationState).assumingMemoryBound(to: VkPipelineRasterizationStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pMultisampleState = addressOf(&_multisampleState).assumingMemoryBound(to: VkPipelineMultisampleStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pColorBlendState = addressOf(&_colorBlendState).assumingMemoryBound(to: VkPipelineColorBlendStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pDynamicState = addressOf(&_dynamicState).assumingMemoryBound(to: VkPipelineDynamicStateCreateInfo.self)
+            graphicsPipelineCreateInfo.layout = pipelineLayout.getPipelineLayout()
+            graphicsPipelineCreateInfo.renderPass = renderPass.getRenderPass()
+            graphicsPipelineCreateInfo.subpass = UInt32(subpass)
+            graphicsPipelineCreateInfo.basePipelineHandle = basePipelineHandle?.getPipeline()
+            graphicsPipelineCreateInfo.basePipelineIndex = Int32(basePipelineIndex)
+
+            guard vkCreateGraphicsPipelines(device, _pipelineCache, 1, &graphicsPipelineCreateInfo, nil, &pipeline) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+        }
+
+        return VulkanPipeline(device: self.device,
+                              pipeline: pipeline!)
+    }
+
+    public func createPipelineLayout(pushConstantRanges: [VkPushConstantRange] = []) -> VulkanPipelineLayout {
+        return pushConstantRanges.withUnsafeBytes { _pushConstantRanges in
+            var pipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo()
+
+            pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
+            pipelineLayoutCreateInfo.pushConstantRangeCount = UInt32(pushConstantRanges.count)
+            pipelineLayoutCreateInfo.pPushConstantRanges = _pushConstantRanges.baseAddress!.assumingMemoryBound(to: VkPushConstantRange.self)
+
+            var pipelineLayout: VkPipelineLayout? = nil
+
+            guard vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nil, &pipelineLayout) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+
+            return VulkanPipelineLayout(device: self.device,
+                                        pipelineLayout: pipelineLayout!)
+        }
+    }
+
     public func createRenderPass(attachments: [VkAttachmentDescription],
                                 subpasses: [VkSubpassDescription],
                                 dependencies: [VkSubpassDependency]) -> VulkanRenderPass {
@@ -310,7 +383,6 @@ public final class VulkanDevice {
                                semaphore: semaphore!)
     }
 
-
     public func createShaderModule(code: Data) -> VulkanShaderModule {
         var shaderModule: VkShaderModule? = nil
 
@@ -318,7 +390,7 @@ public final class VulkanDevice {
             var shaderModuleCreateInfo = VkShaderModuleCreateInfo()
 
             shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO
-            shaderModuleCreateInfo.codeSize = code.count / MemoryLayout <UInt32>.size
+            shaderModuleCreateInfo.codeSize = code.count
             shaderModuleCreateInfo.pCode = _code.baseAddress!.assumingMemoryBound(to: UInt32.self)
 
             guard vkCreateShaderModule(self.device, &shaderModuleCreateInfo, nil, &shaderModule) == VK_SUCCESS else {
@@ -385,12 +457,6 @@ public final class VulkanDevice {
         }
     }
 
-    public func waitIdle() {
-        guard vkDeviceWaitIdle(self.device) == VK_SUCCESS else {
-            preconditionFailure()
-        }
-    }
-
     public func waitForFences(fences: [VulkanFence],
                               waitAll: Bool = true,
                               timeout: UInt64 = .max) {
@@ -405,6 +471,12 @@ public final class VulkanDevice {
                 preconditionFailure()
             }
 
+        }
+    }
+
+    public func waitIdle() {
+        guard vkDeviceWaitIdle(self.device) == VK_SUCCESS else {
+            preconditionFailure()
         }
     }
 }
@@ -576,73 +648,6 @@ public class VulkanMemoryBarrier {
     }
 }
 
-public final class VulkanQueue {
-    private let queue: VkQueue
-
-    public init(queue: VkQueue) {
-        self.queue = queue
-    }
-
-    public func present(waitSemaphores: [VulkanSemaphore],
-                        swapchains: [VulkanSwapchain],
-                        imageIndices: [Int]) {
-        let semaphores = waitSemaphores.map { $0.getSemaphore() }
-        let presentSwapchains = swapchains.map { $0.getSwapchain() }
-        let presentImageIndices = imageIndices.map { UInt32($0) }
-        let _ = semaphores.withUnsafeBytes { _waitSemaphores in
-            let _ = presentSwapchains.withUnsafeBytes { _swapchains in
-                let _ = presentImageIndices.withUnsafeBytes { _imageIndices in
-
-                    var presentInfo = VkPresentInfoKHR()
-
-                    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR
-                    presentInfo.waitSemaphoreCount = UInt32(waitSemaphores.count)
-                    presentInfo.pWaitSemaphores = _waitSemaphores.baseAddress!.assumingMemoryBound(to: VkSemaphore?.self)
-                    presentInfo.swapchainCount = UInt32(swapchains.count)
-                    presentInfo.pSwapchains = _swapchains.baseAddress!.assumingMemoryBound(to: VkSwapchainKHR?.self)
-                    presentInfo.pImageIndices = _imageIndices.baseAddress!.assumingMemoryBound(to: UInt32.self)
-
-                    guard vkQueuePresentKHR(self.queue, &presentInfo) == VK_SUCCESS else {
-                        preconditionFailure()
-                    }
-                }
-            }
-        }
-    }
-
-    public func submit(waitSemaphores: [VulkanSemaphore],
-                       waitDstStageMask: [VkPipelineStageFlags],
-                       commandBuffers: [VulkanCommandBuffer],
-                       signalSemaphores: [VulkanSemaphore],
-                       fence: VulkanFence? = nil) {
-        let submitWaitSemaphores = waitSemaphores.map { $0.getSemaphore() }
-        let submitCommandBuffers = commandBuffers.map { $0.getCommandBuffer() }
-        let submitSignalSemaphores = signalSemaphores.map { $0.getSemaphore() }
-        let _ = submitWaitSemaphores.withUnsafeBytes { _waitSemaphores in
-            let _ = submitSignalSemaphores.withUnsafeBytes { _signalSemaphores in
-                let _ = submitCommandBuffers.withUnsafeBytes { _commandBuffers in
-                    let _ = waitDstStageMask.withUnsafeBytes { _waitDstStageMask in
-                        var submitInfo = VkSubmitInfo()
-
-                        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO
-                        submitInfo.waitSemaphoreCount = UInt32(waitSemaphores.count)
-                        submitInfo.pWaitSemaphores = _waitSemaphores.baseAddress!.assumingMemoryBound(to: VkSemaphore?.self)
-                        submitInfo.pWaitDstStageMask = _waitDstStageMask.baseAddress!.assumingMemoryBound(to: VkPipelineStageFlags.self)
-                        submitInfo.commandBufferCount = UInt32(commandBuffers.count)
-                        submitInfo.pCommandBuffers = _commandBuffers.baseAddress!.assumingMemoryBound(to: VkCommandBuffer?.self)
-                        submitInfo.signalSemaphoreCount = UInt32(signalSemaphores.count)
-                        submitInfo.pSignalSemaphores = _signalSemaphores.baseAddress!.assumingMemoryBound(to: VkSemaphore?.self)
-
-                        guard vkQueueSubmit(self.queue, 1, &submitInfo, fence?.getFence()) == VK_SUCCESS else {
-                            preconditionFailure()
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 public final class VulkanPhysicalDevice {
     private let physicalDevice: VkPhysicalDevice
 
@@ -798,6 +803,331 @@ public final class VulkanPipeline {
 
     public func getPipeline() -> VkPipeline {
         return self.pipeline
+    }
+}
+
+public final class VulkanPipelineCache {
+    private let device: VkDevice
+    private let pipelineCache: VkPipelineCache
+
+    public init(device: VkDevice,
+                pipelineCache: VkPipelineCache) {
+        self.device = device
+        self.pipelineCache = pipelineCache
+    }
+
+    deinit {
+        vkDestroyPipelineCache(self.device, self.pipelineCache, nil)
+    }
+
+    public func getPipelineCache() -> VkPipelineCache {
+        return self.pipelineCache
+    }
+}
+
+public final class VulkanPipelineColorBlendState {
+    private let logicOpEnable: Bool
+    private let attachments: [VkPipelineColorBlendAttachmentState]
+
+    private lazy var attachmentsBuffer: UnsafeBufferPointer <VkPipelineColorBlendAttachmentState> = self.attachments.withUnsafeBytes { $0.bindMemory(to: VkPipelineColorBlendAttachmentState.self) }
+
+    public init(logicOpEnable: Bool,
+                attachments: [VkPipelineColorBlendAttachmentState]) {
+        self.logicOpEnable = logicOpEnable
+        self.attachments = attachments
+    }
+
+    public func getPipelineColorBlendStateCreateInfo() -> VkPipelineColorBlendStateCreateInfo {
+        var pipelineColorBlendStateCreateInfo = VkPipelineColorBlendStateCreateInfo()
+
+        pipelineColorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO
+        pipelineColorBlendStateCreateInfo.logicOpEnable = VkBool32(self.logicOpEnable ? VK_TRUE : VK_FALSE)
+        pipelineColorBlendStateCreateInfo.attachmentCount = UInt32(self.attachments.count)
+        pipelineColorBlendStateCreateInfo.pAttachments = self.attachmentsBuffer.baseAddress!
+        return pipelineColorBlendStateCreateInfo
+    }
+}
+
+public final class VulkanPipelineDynamicState {
+    private let dynamicStates: [VkDynamicState]
+
+    private lazy var dynamicStatesBuffer: UnsafeBufferPointer <VkDynamicState> = self.dynamicStates.withUnsafeBytes { $0.bindMemory(to: VkDynamicState.self) }
+
+    public init(dynamicStates: [VkDynamicState]) {
+        self.dynamicStates = dynamicStates
+    }
+
+    public func getPipelineDynamicStateCreateInfo() -> VkPipelineDynamicStateCreateInfo {
+        var pipelineDynamicStateCreateInfo = VkPipelineDynamicStateCreateInfo()
+
+        pipelineDynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO
+        pipelineDynamicStateCreateInfo.dynamicStateCount = UInt32(self.dynamicStates.count)
+        pipelineDynamicStateCreateInfo.pDynamicStates = self.dynamicStatesBuffer.baseAddress!
+        return pipelineDynamicStateCreateInfo
+    }
+}
+
+public final class VulkanPipelineInputAssemblyState {
+    private let topology: VkPrimitiveTopology
+    private let primitiveRestartEnable: Bool
+
+    public init(topology: VkPrimitiveTopology,
+                primitiveRestartEnable: Bool) {
+        self.topology = topology
+        self.primitiveRestartEnable = primitiveRestartEnable
+    }
+
+    public func getPipelineInputAssemblyStateCreateInfo() -> VkPipelineInputAssemblyStateCreateInfo {
+        var pipelineInputAssemblyStateCreateInfo = VkPipelineInputAssemblyStateCreateInfo()
+
+        pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO
+        pipelineInputAssemblyStateCreateInfo.topology = self.topology
+        pipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VkBool32(self.primitiveRestartEnable ? VK_TRUE : VK_FALSE)
+        return pipelineInputAssemblyStateCreateInfo
+    }
+}
+
+public final class VulkanPipelineLayout {
+    private let device: VkDevice
+    private let pipelineLayout: VkPipelineLayout
+
+    public init(device: VkDevice,
+                pipelineLayout: VkPipelineLayout) {
+        self.device = device
+        self.pipelineLayout = pipelineLayout
+    }
+
+    deinit {
+        vkDestroyPipelineLayout(self.device, self.pipelineLayout, nil)
+    }
+
+    public func getPipelineLayout() -> VkPipelineLayout {
+        return self.pipelineLayout
+    }
+}
+
+public final class VulkanPipelineMultisampleState {
+    private let rasterizationSamples: VkSampleCountFlagBits
+    private let sampleShadingEnable: Bool
+    private let minSampleShading: Float
+    private let sampleMask: [VkSampleMask]
+    private let alphaToCoverageEnable: Bool
+    private let alphaToOneEnable: Bool
+
+    private lazy var sampleMaskBuffer: UnsafeBufferPointer <VkSampleMask> = self.sampleMask.withUnsafeBytes { $0.bindMemory(to: VkSampleMask.self) }
+
+    public init(rasterizationSamples: VkSampleCountFlagBits,
+                sampleShadingEnable: Bool,
+                minSampleShading: Float,
+                sampleMask: [VkSampleMask],
+                alphaToCoverageEnable: Bool,
+                alphaToOneEnable: Bool) {
+        self.rasterizationSamples = rasterizationSamples
+        self.sampleShadingEnable = sampleShadingEnable
+        self.minSampleShading = minSampleShading
+        self.sampleMask = sampleMask
+        self.alphaToCoverageEnable = alphaToCoverageEnable
+        self.alphaToOneEnable = alphaToOneEnable
+    }
+
+    public func getPipelineMultisampleStateCreateInfo() -> VkPipelineMultisampleStateCreateInfo {
+        var pipelineMultisampleStateCreateInfo = VkPipelineMultisampleStateCreateInfo()
+
+        pipelineMultisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO
+        pipelineMultisampleStateCreateInfo.rasterizationSamples = self.rasterizationSamples
+        pipelineMultisampleStateCreateInfo.sampleShadingEnable = VkBool32(self.sampleShadingEnable ? VK_TRUE : VK_FALSE)
+        pipelineMultisampleStateCreateInfo.minSampleShading = self.minSampleShading
+        pipelineMultisampleStateCreateInfo.pSampleMask = self.sampleMaskBuffer.baseAddress!
+        pipelineMultisampleStateCreateInfo.alphaToCoverageEnable = VkBool32(self.alphaToCoverageEnable ? VK_TRUE : VK_FALSE)
+        pipelineMultisampleStateCreateInfo.alphaToOneEnable = VkBool32(self.alphaToOneEnable ? VK_TRUE : VK_FALSE)
+        return pipelineMultisampleStateCreateInfo
+    }
+}
+
+public final class VulkanPipelineRasterizationState {
+    private let depthClampEnable: Bool
+    private let rasterizerDiscardEnable: Bool
+    private let polygonMode: VkPolygonMode
+    private let cullMode: VkCullModeFlags
+    private let frontFace: VkFrontFace
+    private let depthBiasEnable: Bool
+    private let depthBiasConstantFactor: Float
+    private let depthBiasClamp: Float
+    private let depthBiasSlopeFactor: Float
+    private let lineWidth: Float
+
+    public init(depthClampEnable: Bool,
+                rasterizerDiscardEnable: Bool,
+                polygonMode: VkPolygonMode,
+                cullMode: VkCullModeFlags,
+                frontFace: VkFrontFace,
+                depthBiasEnable: Bool,
+                depthBiasConstantFactor: Float,
+                depthBiasClamp: Float,
+                depthBiasSlopeFactor: Float,
+                lineWidth: Float) {
+        self.depthClampEnable = depthClampEnable
+        self.rasterizerDiscardEnable = rasterizerDiscardEnable
+        self.polygonMode = polygonMode
+        self.cullMode = cullMode
+        self.frontFace = frontFace
+        self.depthBiasEnable = depthBiasEnable
+        self.depthBiasConstantFactor = depthBiasConstantFactor
+        self.depthBiasClamp = depthBiasClamp
+        self.depthBiasSlopeFactor = depthBiasSlopeFactor
+        self.lineWidth = lineWidth
+    }
+
+    public func getPipelineRasterizationStateCreateInfo() -> VkPipelineRasterizationStateCreateInfo {
+        var pipelineRasterizationStateCreateInfo = VkPipelineRasterizationStateCreateInfo()
+
+        pipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO
+        pipelineRasterizationStateCreateInfo.depthClampEnable = VkBool32(self.depthClampEnable ? VK_TRUE : VK_FALSE)
+        pipelineRasterizationStateCreateInfo.rasterizerDiscardEnable = VkBool32(self.rasterizerDiscardEnable ? VK_TRUE : VK_FALSE)
+        pipelineRasterizationStateCreateInfo.polygonMode = self.polygonMode
+        pipelineRasterizationStateCreateInfo.cullMode = self.cullMode
+        pipelineRasterizationStateCreateInfo.frontFace = self.frontFace
+        pipelineRasterizationStateCreateInfo.depthBiasEnable = VkBool32(self.depthBiasEnable ? VK_TRUE : VK_FALSE)
+        pipelineRasterizationStateCreateInfo.depthBiasConstantFactor = self.depthBiasConstantFactor
+        pipelineRasterizationStateCreateInfo.depthBiasClamp = self.depthBiasClamp
+        pipelineRasterizationStateCreateInfo.depthBiasSlopeFactor = self.depthBiasSlopeFactor
+        pipelineRasterizationStateCreateInfo.lineWidth = self.lineWidth
+        return pipelineRasterizationStateCreateInfo
+    }
+}
+
+public final class VulkanPipelineShaderStage {
+    private let flags: VkPipelineShaderStageCreateFlags
+    private let stage: VkShaderStageFlagBits
+    private let shaderModule: VulkanShaderModule
+    private let name: UnsafeMutablePointer <CChar>
+
+    public init(flags: VkPipelineShaderStageCreateFlags = 0,
+                stage: VkShaderStageFlagBits,
+                shaderModule: VulkanShaderModule,
+                name: String) {
+        self.flags = flags
+        self.stage = stage
+        self.shaderModule = shaderModule
+        self.name = name.withCString { strdup($0) }
+    }
+
+    deinit {
+        free(self.name)
+    }
+
+    public func getPipelineShaderStageCreateInfo() -> VkPipelineShaderStageCreateInfo {
+        var pipelineShaderStageCreateInfo = VkPipelineShaderStageCreateInfo()
+
+        pipelineShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+        pipelineShaderStageCreateInfo.stage = self.stage
+        pipelineShaderStageCreateInfo.module = self.shaderModule.getShaderModule()
+        pipelineShaderStageCreateInfo.pName = UnsafeRawPointer(self.name).assumingMemoryBound(to: CChar.self)
+        return pipelineShaderStageCreateInfo
+    }
+}
+
+public final class VulkanPipelineVertexInputState {
+    public init() {
+    }
+
+    public func getPipelineVertexInputStateCreateInfo() -> VkPipelineVertexInputStateCreateInfo {
+        var pipelineVertexInputStateCreateInfo = VkPipelineVertexInputStateCreateInfo()
+
+        pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
+        return pipelineVertexInputStateCreateInfo
+    }
+}
+
+public final class VulkanPipelineViewportState {
+    private let viewports: [VkViewport]
+    private let scissors: [VkRect2D]
+
+    private lazy var viewportsBuffer: UnsafeBufferPointer <VkViewport> = self.viewports.withUnsafeBytes { $0.bindMemory(to: VkViewport.self) }
+    private lazy var scissorsBuffer: UnsafeBufferPointer <VkRect2D> = self.scissors.withUnsafeBytes { $0.bindMemory(to: VkRect2D.self) }
+
+    public init(viewports: [VkViewport],
+                scissors: [VkRect2D]) {
+        self.viewports = viewports
+        self.scissors = scissors
+    }
+
+    public func getPipelineViewportStateCreateInfo() -> VkPipelineViewportStateCreateInfo {
+        var pipelineViewportStateCreateInfo = VkPipelineViewportStateCreateInfo()
+
+        pipelineViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO
+        pipelineViewportStateCreateInfo.viewportCount = UInt32(max(1, self.viewports.count))
+        pipelineViewportStateCreateInfo.pViewports = self.viewportsBuffer.baseAddress!
+        pipelineViewportStateCreateInfo.scissorCount = UInt32(max(1, self.scissors.count))
+        pipelineViewportStateCreateInfo.pScissors = self.scissorsBuffer.baseAddress!
+        return pipelineViewportStateCreateInfo
+    }
+}
+
+public final class VulkanQueue {
+    private let queue: VkQueue
+
+    public init(queue: VkQueue) {
+        self.queue = queue
+    }
+
+    public func present(waitSemaphores: [VulkanSemaphore],
+                        swapchains: [VulkanSwapchain],
+                        imageIndices: [Int]) {
+        let semaphores = waitSemaphores.map { $0.getSemaphore() }
+        let presentSwapchains = swapchains.map { $0.getSwapchain() }
+        let presentImageIndices = imageIndices.map { UInt32($0) }
+        let _ = semaphores.withUnsafeBytes { _waitSemaphores in
+            let _ = presentSwapchains.withUnsafeBytes { _swapchains in
+                let _ = presentImageIndices.withUnsafeBytes { _imageIndices in
+
+                    var presentInfo = VkPresentInfoKHR()
+
+                    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR
+                    presentInfo.waitSemaphoreCount = UInt32(waitSemaphores.count)
+                    presentInfo.pWaitSemaphores = _waitSemaphores.baseAddress!.assumingMemoryBound(to: VkSemaphore?.self)
+                    presentInfo.swapchainCount = UInt32(swapchains.count)
+                    presentInfo.pSwapchains = _swapchains.baseAddress!.assumingMemoryBound(to: VkSwapchainKHR?.self)
+                    presentInfo.pImageIndices = _imageIndices.baseAddress!.assumingMemoryBound(to: UInt32.self)
+
+                    guard vkQueuePresentKHR(self.queue, &presentInfo) == VK_SUCCESS else {
+                        preconditionFailure()
+                    }
+                }
+            }
+        }
+    }
+
+    public func submit(waitSemaphores: [VulkanSemaphore],
+                       waitDstStageMask: [VkPipelineStageFlags],
+                       commandBuffers: [VulkanCommandBuffer],
+                       signalSemaphores: [VulkanSemaphore],
+                       fence: VulkanFence? = nil) {
+        let submitWaitSemaphores = waitSemaphores.map { $0.getSemaphore() }
+        let submitCommandBuffers = commandBuffers.map { $0.getCommandBuffer() }
+        let submitSignalSemaphores = signalSemaphores.map { $0.getSemaphore() }
+        let _ = submitWaitSemaphores.withUnsafeBytes { _waitSemaphores in
+            let _ = submitSignalSemaphores.withUnsafeBytes { _signalSemaphores in
+                let _ = submitCommandBuffers.withUnsafeBytes { _commandBuffers in
+                    let _ = waitDstStageMask.withUnsafeBytes { _waitDstStageMask in
+                        var submitInfo = VkSubmitInfo()
+
+                        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO
+                        submitInfo.waitSemaphoreCount = UInt32(waitSemaphores.count)
+                        submitInfo.pWaitSemaphores = _waitSemaphores.baseAddress!.assumingMemoryBound(to: VkSemaphore?.self)
+                        submitInfo.pWaitDstStageMask = _waitDstStageMask.baseAddress!.assumingMemoryBound(to: VkPipelineStageFlags.self)
+                        submitInfo.commandBufferCount = UInt32(commandBuffers.count)
+                        submitInfo.pCommandBuffers = _commandBuffers.baseAddress!.assumingMemoryBound(to: VkCommandBuffer?.self)
+                        submitInfo.signalSemaphoreCount = UInt32(signalSemaphores.count)
+                        submitInfo.pSignalSemaphores = _signalSemaphores.baseAddress!.assumingMemoryBound(to: VkSemaphore?.self)
+
+                        guard vkQueueSubmit(self.queue, 1, &submitInfo, fence?.getFence()) == VK_SUCCESS else {
+                            preconditionFailure()
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

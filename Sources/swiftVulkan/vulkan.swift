@@ -704,6 +704,13 @@ public final class VulkanPhysicalDevice {
         }
     }
 
+    public func getPhysicalDeviceProperties() -> VkPhysicalDeviceProperties {
+        var physicalDeviceProperties = VkPhysicalDeviceProperties()
+
+        vkGetPhysicalDeviceProperties(self.physicalDevice, &physicalDeviceProperties)
+        return physicalDeviceProperties
+    }
+
     public func getQueueFamilyProperties() -> [VkQueueFamilyProperties] {
         var queueFamilyPropertiesCount = UInt32(0)
 

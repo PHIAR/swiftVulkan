@@ -602,6 +602,17 @@ public final class VulkanImageView {
 public final class VulkanInstance {
     private let instance: VkInstance
 
+    public convenience init() {
+        var createInfo = VkInstanceCreateInfo()
+        var instance: VkInstance? = nil
+
+        guard vkCreateInstance(&createInfo, nil, &instance) == VK_SUCCESS else {
+            preconditionFailure()
+        }
+
+        self.init(instance: instance!)
+    }
+
     public init(instance: VkInstance) {
         self.instance = instance
     }
@@ -658,6 +669,8 @@ public final class VulkanPhysicalDevice {
     public func createDevice(queues: [Int],
                              layerNames: [String],
                              extensions: [String]) -> VulkanDevice {
+        precondition(!queues.isEmpty)
+
         let queuePriorities = Array(repeating: Float(1.0),
                                     count: queues.count)
 

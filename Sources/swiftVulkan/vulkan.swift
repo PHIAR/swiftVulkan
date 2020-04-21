@@ -402,7 +402,7 @@ public final class VulkanDevice {
                                   shaderModule: shaderModule!)
     }
 
-    public func createSwapchain(surface: VkSurfaceKHR,
+    public func createSwapchain(surface: VulkanSurface,
                                 surfaceFormat: VkSurfaceFormatKHR,
                                 surfaceCapabilities: VkSurfaceCapabilitiesKHR,
                                 presentMode: VkPresentModeKHR) -> VulkanSwapchain {
@@ -413,7 +413,7 @@ public final class VulkanDevice {
         var swapchainCreateInfo = VkSwapchainCreateInfoKHR()
 
         swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR
-        swapchainCreateInfo.surface = surface
+        swapchainCreateInfo.surface = surface.getSurface()
         swapchainCreateInfo.minImageCount = swapchainImageCount
         swapchainCreateInfo.imageFormat = swapchainImageFormat
         swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace
@@ -745,20 +745,20 @@ public final class VulkanPhysicalDevice {
         return queueFamilyProperties
     }
 
-    public func getSurfaceCapabilities(surface: VkSurfaceKHR) -> VkSurfaceCapabilitiesKHR {
+    public func getSurfaceCapabilities(surface: VulkanSurface) -> VkSurfaceCapabilitiesKHR {
         var surfaceCapabilities = VkSurfaceCapabilitiesKHR()
 
-        guard vkGetPhysicalDeviceSurfaceCapabilitiesKHR(self.physicalDevice, surface, &surfaceCapabilities) == VK_SUCCESS else {
+        guard vkGetPhysicalDeviceSurfaceCapabilitiesKHR(self.physicalDevice, surface.getSurface(), &surfaceCapabilities) == VK_SUCCESS else {
             preconditionFailure()
         }
 
         return surfaceCapabilities
     }
 
-    public func getSurfaceFormats(surface: VkSurfaceKHR) -> [VkSurfaceFormatKHR] {
+    public func getSurfaceFormats(surface: VulkanSurface) -> [VkSurfaceFormatKHR] {
         var surfaceFormatsCount = UInt32(0)
 
-        guard vkGetPhysicalDeviceSurfaceFormatsKHR(self.physicalDevice, surface, &surfaceFormatsCount, nil) == VK_SUCCESS else {
+        guard vkGetPhysicalDeviceSurfaceFormatsKHR(self.physicalDevice, surface.getSurface(), &surfaceFormatsCount, nil) == VK_SUCCESS else {
             preconditionFailure()
         }
 
@@ -767,7 +767,7 @@ public final class VulkanPhysicalDevice {
 
         surfaceFormats.withUnsafeMutableBytes {
             guard vkGetPhysicalDeviceSurfaceFormatsKHR(self.physicalDevice,
-                                                       surface,
+                                                       surface.getSurface(),
                                                        &surfaceFormatsCount,
                                                        $0.baseAddress!.assumingMemoryBound(to: VkSurfaceFormatKHR.self)) == VK_SUCCESS else {
                 preconditionFailure()
@@ -777,10 +777,13 @@ public final class VulkanPhysicalDevice {
         return surfaceFormats
     }
 
-    public func getSurfacePresentModes(surface: VkSurfaceKHR) -> [VkPresentModeKHR] {
+    public func getSurfacePresentModes(surface: VulkanSurface) -> [VkPresentModeKHR] {
         var presentModeCount = UInt32(0)
 
-        guard vkGetPhysicalDeviceSurfacePresentModesKHR(self.physicalDevice, surface, &presentModeCount, nil) == VK_SUCCESS else {
+        guard vkGetPhysicalDeviceSurfacePresentModesKHR(self.physicalDevice,
+                                                        surface.getSurface(),
+                                                        &presentModeCount,
+                                                        nil) == VK_SUCCESS else {
             preconditionFailure()
         }
 
@@ -789,7 +792,7 @@ public final class VulkanPhysicalDevice {
 
         presentModes.withUnsafeMutableBytes {
             guard vkGetPhysicalDeviceSurfacePresentModesKHR(self.physicalDevice,
-                                                            surface,
+                                                            surface.getSurface(),
                                                             &presentModeCount,
                                                             $0.baseAddress!.assumingMemoryBound(to: VkPresentModeKHR.self)) == VK_SUCCESS else {
                 preconditionFailure()
@@ -799,11 +802,11 @@ public final class VulkanPhysicalDevice {
         return presentModes
     }
 
-    public func isSurfaceSupported(surface: VkSurfaceKHR,
+    public func isSurfaceSupported(surface: VulkanSurface,
                                    onQueue queueIndex: Int) -> Bool {
         var supportsPresent = VkBool32(VK_FALSE)
 
-        guard vkGetPhysicalDeviceSurfaceSupportKHR(self.physicalDevice, UInt32(queueIndex), surface, &supportsPresent) == VK_SUCCESS else {
+        guard vkGetPhysicalDeviceSurfaceSupportKHR(self.physicalDevice, UInt32(queueIndex), surface.getSurface(), &supportsPresent) == VK_SUCCESS else {
             preconditionFailure()
         }
 
@@ -1209,6 +1212,25 @@ public final class VulkanShaderModule {
 
     public func getShaderModule() -> VkShaderModule {
         return self.shaderModule
+    }
+}
+
+public final class VulkanSurface {
+    private let instance: VkInstance
+    private let surface: VkSurfaceKHR
+
+    public init(instance: VkInstance,
+                surface: VkSurfaceKHR) {
+        self.instance = instance
+        self.surface = surface
+    }
+
+    deinit {
+        vkDestroySurfaceKHR(self.instance, self.surface, nil)
+    }
+
+    public func getSurface() -> VkSurfaceKHR {
+        return self.surface
     }
 }
 

@@ -6,7 +6,7 @@ import Foundation
 import vulkan.android
 
 extension VulkanInstance {
-    public func createAndroidSurface(window: OpaquePointer) -> VkSurfaceKHR {
+    public func createAndroidSurface(window: OpaquePointer) -> VulkanSurface {
         var androidSurfaceCreateInfo = VkAndroidSurfaceCreateInfoKHR()
 
         androidSurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR
@@ -18,7 +18,7 @@ extension VulkanInstance {
             preconditionFailure()
         }
 
-        return surface!
+        return VulkanSurface(surface: surface!)
     }
 }
 

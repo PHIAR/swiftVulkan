@@ -617,6 +617,10 @@ public final class VulkanInstance {
         self.instance = instance
     }
 
+    public func getInstance() -> VkInstance {
+        return self.instance
+    }
+
     public func getPhysicalDevices() -> [VulkanPhysicalDevice] {
         var physicalDeviceCount = UInt32(0)
 

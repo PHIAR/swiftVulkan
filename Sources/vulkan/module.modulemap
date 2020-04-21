@@ -3,5 +3,10 @@ module vulkan {
     module * { export * }
     export *
     link "vulkan"
+
+    explicit module android {
+        header "vulkan_android.h"
+        export *
+    }
 }
 

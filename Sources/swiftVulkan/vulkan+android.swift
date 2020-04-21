@@ -18,7 +18,8 @@ extension VulkanInstance {
             preconditionFailure()
         }
 
-        return VulkanSurface(surface: surface!)
+        return VulkanSurface(instance: self.getInstance(),
+                             surface: surface!)
     }
 }
 

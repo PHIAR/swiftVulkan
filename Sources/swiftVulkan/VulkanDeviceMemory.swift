@@ -20,13 +20,13 @@ public final class VulkanDeviceMemory {
     }
 
     public func map(offset: Int = 0,
-                    size: Int = Int(VK_WHOLE_SIZE)) -> UnsafeMutableRawPointer {
+                    size: Int = 0) -> UnsafeMutableRawPointer {
         var pointer: UnsafeMutableRawPointer? = nil
 
         guard vkMapMemory(self.device,
                           self.deviceMemory,
                           VkDeviceSize(offset),
-                          VkDeviceSize(size),
+                          (size == 0) ? VK_WHOLE_SIZE : VkDeviceSize(size),
                           0,
                           &pointer) == VK_SUCCESS else {
             preconditionFailure()

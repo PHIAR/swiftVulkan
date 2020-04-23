@@ -115,6 +115,13 @@ public final class VulkanCommandBuffer {
         }
     }
 
+    public func bindPipeline(pipelineBindPoint: VkPipelineBindPoint,
+                             pipeline: VulkanPipeline) {
+        vkCmdBindPipeline(self.commandBuffer,
+                          pipelineBindPoint,
+                          pipeline.getPipeline())
+    }
+
     public func clearColor(image: VulkanImage,
                            imageLayout: VkImageLayout,
                            color: VkClearColorValue,

@@ -132,6 +132,37 @@ public final class VulkanCommandBuffer {
         }
     }
 
+    public func dispatch(groupCountX: Int,
+                         groupCountY: Int,
+                         groupCountZ: Int) {
+        vkCmdDispatch(self.commandBuffer,
+                      UInt32(groupCountX),
+                      UInt32(groupCountY),
+                      UInt32(groupCountZ))
+    }
+
+    public func dispatchBase(baseGroupX: Int,
+                             baseGroupY: Int,
+                             baseGroupZ: Int,
+                             groupCountX: Int,
+                             groupCountY: Int,
+                             groupCountZ: Int) {
+        vkCmdDispatchBase(self.commandBuffer,
+                          UInt32(baseGroupX),
+                          UInt32(baseGroupY),
+                          UInt32(baseGroupZ),
+                          UInt32(groupCountX),
+                          UInt32(groupCountY),
+                          UInt32(groupCountZ))
+    }
+
+    public func dispatchIndirect(buffer: VulkanBuffer,
+                                 offset: Int) {
+        vkCmdDispatchIndirect(self.commandBuffer,
+                              buffer.getBuffer(),
+                              VkDeviceSize(offset))
+    }
+
     public func draw(vertexCount: Int,
                      instanceCount: Int,
                      firstVertex: Int,

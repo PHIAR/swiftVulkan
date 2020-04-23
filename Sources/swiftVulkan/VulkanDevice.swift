@@ -15,6 +15,35 @@ public final class VulkanDevice {
         vkDestroyDevice(self.device, nil)
     }
 
+    public func allocateDescriptorSets(descriptorPool: VulkanDescriptorPool,
+                                       setLayouts: [VulkanDescriptorSetLayout]) -> [VulkanDescriptorSet] {
+        let descriptorSetLayouts = setLayouts.map { $0.getDescriptorSetLayout() }
+
+        return descriptorSetLayouts.withUnsafeBytes { _setLayouts in
+            var allocateInfo = VkDescriptorSetAllocateInfo()
+
+            allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO
+            allocateInfo.descriptorPool = descriptorPool.getDescriptorPool()
+            allocateInfo.descriptorSetCount = UInt32(setLayouts.count)
+            allocateInfo.pSetLayouts = _setLayouts.baseAddress!.assumingMemoryBound(to: VkDescriptorSetLayout?.self)
+
+            var descriptorSets: [VkDescriptorSet?] = Array(repeating: nil,
+                                                          count: setLayouts.count)
+
+            descriptorSets.withUnsafeMutableBytes { _descriptorSets in
+                guard vkAllocateDescriptorSets(self.device,
+                                               &allocateInfo,
+                                               _descriptorSets.baseAddress!.assumingMemoryBound(to: VkDescriptorSet?.self)) == VK_SUCCESS else {
+                    preconditionFailure()
+                }
+            }
+
+            return descriptorSets.map { VulkanDescriptorSet(device: self.device,
+                                                            descriptorPool: descriptorPool.getDescriptorPool(),
+                                                            descriptorSet: $0!) }
+        }
+    }
+
     public func allocateMemory(size: Int,
                                memoryTypeIndex: Int) -> VulkanDeviceMemory {
         var allocateInfo = VkMemoryAllocateInfo()

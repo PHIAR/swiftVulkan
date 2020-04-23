@@ -122,6 +122,15 @@ public final class VulkanCommandBuffer {
                           pipeline.getPipeline())
     }
 
+    public func bindIndexBuffer(buffer: VulkanBuffer,
+                                offset: Int,
+                                indexType: VkIndexType) {
+        vkCmdBindIndexBuffer(self.commandBuffer,
+                             buffer.getBuffer(),
+                             VkDeviceSize(offset),
+                             indexType)
+    }
+
     public func clearColor(image: VulkanImage,
                            imageLayout: VkImageLayout,
                            color: VkClearColorValue,

@@ -269,6 +269,18 @@ public final class VulkanCommandBuffer {
             }
         }
     }
+
+    public func pushConstants(layout: VulkanPipelineLayout,
+                              stageFlags: VkShaderStageFlags,
+                              offset: Int,
+                              values: UnsafeRawBufferPointer) {
+        vkCmdPushConstants(self.commandBuffer,
+                           layout.getPipelineLayout(),
+                           stageFlags,
+                           UInt32(offset),
+                           UInt32(values.count),
+                           values.baseAddress!)
+    }
 }
 
 public final class VulkanCommandPool {

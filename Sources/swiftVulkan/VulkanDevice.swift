@@ -100,6 +100,21 @@ public final class VulkanDevice {
         }
     }
 
+    public func createEvent() -> VulkanEvent {
+        var eventCreateInfo = VkEventCreateInfo()
+
+        eventCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+
+        var event: VkEvent? = nil
+
+        guard vkCreateEvent(self.device, &eventCreateInfo, nil, &event) == VK_SUCCESS else {
+            preconditionFailure()
+        }
+
+        return VulkanEvent(device: device,
+                           event: event!)
+    }
+
     public func createFence(flags: VkFenceCreateFlags = VK_FENCE_CREATE_SIGNALED_BIT.rawValue) -> VulkanFence {
         var fenceCreateInfo = VkFenceCreateInfo()
 

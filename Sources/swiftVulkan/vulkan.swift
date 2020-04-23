@@ -169,6 +169,24 @@ public final class VulkanCommandBuffer {
         }
     }
 
+    public func blitImage(srcImage: VulkanImage,
+                          srcImageLayout: VkImageLayout,
+                          dstImage: VulkanImage,
+                          dstImageLayout: VkImageLayout,
+                          regions: [VkImageBlit],
+                          filter: VkFilter) {
+        regions.withUnsafeBytes { _regions in
+            vkCmdBlitImage(self.commandBuffer,
+                           srcImage.getImage(),
+                           srcImageLayout,
+                           dstImage.getImage(),
+                           dstImageLayout,
+                           UInt32(regions.count),
+                           _regions.baseAddress!.assumingMemoryBound(to: VkImageBlit.self),
+                           filter)
+        }
+    }
+
     public func clearColor(image: VulkanImage,
                            imageLayout: VkImageLayout,
                            color: VkClearColorValue,

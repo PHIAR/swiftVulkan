@@ -354,6 +354,16 @@ public final class VulkanCommandBuffer {
         vkResetCommandBuffer(self.commandBuffer,
                              flags)
     }
+
+    public func updateBuffer(dstBuffer: VulkanBuffer,
+                             dstOffset: Int,
+                             data: UnsafeRawBufferPointer) {
+        vkCmdUpdateBuffer(self.commandBuffer,
+                          dstBuffer.getBuffer(),
+                          VkDeviceSize(dstOffset),
+                          VkDeviceSize(data.count),
+                          data.baseAddress!)
+    }
 }
 
 public final class VulkanCommandPool {

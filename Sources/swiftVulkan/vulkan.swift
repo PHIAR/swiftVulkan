@@ -355,6 +355,16 @@ public final class VulkanCommandBuffer {
                              flags)
     }
 
+    public func setScissor(firstScissor: Int = 0,
+                           scissors: [VkRect2D]) {
+        scissors.withUnsafeBytes { _scissors in
+            vkCmdSetScissor(self.commandBuffer,
+                            UInt32(firstScissor),
+                            UInt32(scissors.count),
+                            _scissors.baseAddress!.assumingMemoryBound(to: VkRect2D.self))
+        }
+    }
+
     public func setViewport(firstViewport: Int = 0,
                             viewports: [VkViewport]) {
         viewports.withUnsafeBytes { _viewports in

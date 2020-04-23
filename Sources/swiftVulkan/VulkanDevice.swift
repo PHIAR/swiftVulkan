@@ -208,6 +208,36 @@ public final class VulkanDevice {
                                imageView: imageView!)
     }
 
+    public func createComputePipeline(pipelineCache: VulkanPipelineCache? = nil,
+                                      flags: VkPipelineCreateFlags,
+                                      stage: VulkanPipelineShaderStage,
+                                      layout: VulkanPipelineLayout,
+                                      basePipelineHandle: VulkanPipeline? = nil,
+                                      basePipelineIndex: Int = 0) -> VulkanPipeline {
+        var computePipelineCreateInfo = VkComputePipelineCreateInfo()
+
+        computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+        computePipelineCreateInfo.flags = flags
+        computePipelineCreateInfo.stage = stage.getPipelineShaderStageCreateInfo()
+        computePipelineCreateInfo.layout = layout.getPipelineLayout()
+        computePipelineCreateInfo.basePipelineHandle = basePipelineHandle?.getPipeline()
+        computePipelineCreateInfo.basePipelineIndex = Int32(basePipelineIndex)
+
+        var pipeline: VkPipeline? = nil
+
+        guard vkCreateComputePipelines(self.device,
+                                       pipelineCache?.getPipelineCache(),
+                                       1,
+                                       &computePipelineCreateInfo,
+                                       nil,
+                                       &pipeline) == VK_SUCCESS else {
+            preconditionFailure()
+        }
+
+        return VulkanPipeline(device: self.device,
+                              pipeline: pipeline!)
+    }
+
     public func createGraphicsPipeline(pipelineCache: VulkanPipelineCache? = nil,
                                        stages: [VulkanPipelineShaderStage],
                                        vertexInputState: VulkanPipelineVertexInputState,

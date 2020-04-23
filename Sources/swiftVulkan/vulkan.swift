@@ -307,6 +307,17 @@ public final class VulkanCommandBuffer {
         vkCmdEndRenderPass(self.commandBuffer)
     }
 
+    public func fillBuffer(dstBuffer: VulkanBuffer,
+                           dstOffset: Int,
+                           size: Int,
+                           data: UInt32) {
+        vkCmdFillBuffer(self.commandBuffer,
+                        dstBuffer.getBuffer(),
+                        VkDeviceSize(dstOffset),
+                        VkDeviceSize(size),
+                        data)
+    }
+
     public func getCommandBuffer() -> VkCommandBuffer {
         return self.commandBuffer
     }

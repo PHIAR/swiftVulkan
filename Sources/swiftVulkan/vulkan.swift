@@ -848,6 +848,16 @@ public final class VulkanImage {
         vkDestroyImage(self.device, self.image, nil)
     }
 
+    public func bindImageMemory(deviceMemory: VulkanDeviceMemory,
+                                offset: Int) {
+        guard vkBindImageMemory(self.device,
+                                self.image,
+                                deviceMemory.getDeviceMemory(),
+                                VkDeviceSize(offset)) == VK_SUCCESS else {
+            preconditionFailure()
+        }
+    }
+
     public func getImage() -> VkImage {
         return self.image
     }

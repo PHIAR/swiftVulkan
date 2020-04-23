@@ -2,17 +2,17 @@ import vulkan
 import Foundation
 
 public final class VulkanCommandPool {
-    private let device: VkDevice
+    private let device: VulkanDevice
     private let commandPool: VkCommandPool
 
-    public init(device: VkDevice,
+    public init(device: VulkanDevice,
                 commandPool: VkCommandPool) {
         self.device = device
         self.commandPool = commandPool
     }
 
     deinit {
-        vkDestroyCommandPool(self.device, self.commandPool, nil)
+        vkDestroyCommandPool(self.device.getDevice(), self.commandPool, nil)
     }
 
     public func allocateCommandBuffers(count: Int) -> [VulkanCommandBuffer] {
@@ -27,7 +27,9 @@ public final class VulkanCommandPool {
                                                        count: count)
 
         commandBuffers.withUnsafeMutableBytes {
-            guard vkAllocateCommandBuffers(self.device, &commandBufferAllocInfo, $0.baseAddress!.assumingMemoryBound(to: VkCommandBuffer?.self)) == VK_SUCCESS else {
+            guard vkAllocateCommandBuffers(self.device.getDevice(),
+                                           &commandBufferAllocInfo,
+                                           $0.baseAddress!.assumingMemoryBound(to: VkCommandBuffer?.self)) == VK_SUCCESS else {
                 preconditionFailure()
             }
         }

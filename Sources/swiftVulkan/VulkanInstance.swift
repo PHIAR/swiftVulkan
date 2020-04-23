@@ -2,7 +2,34 @@ import vulkan
 import Foundation
 
 public final class VulkanInstance {
+    public typealias vkCmdDrawIndexedIndirectCountPointer = @convention (c) (_ commandBuffer: VkCommandBuffer,
+                                                                             _ buffer: VkBuffer,
+                                                                             _ offset: VkDeviceSize,
+                                                                             _ countBuffer: VkBuffer,
+                                                                             _ countBufferOffset: VkDeviceSize,
+                                                                             _ maxDrawCount: UInt32,
+                                                                             _ stride: UInt32) -> Void
+
     private let instance: VkInstance
+
+    public lazy var vkCmdDrawIndexedIndirectCount: vkCmdDrawIndexedIndirectCountPointer? = {
+        var pointer = unsafeBitCast(self.getProcAddress(name: "vkCmdDrawIndexedIndirectCount"),
+                                    to: vkCmdDrawIndexedIndirectCountPointer?.self)
+
+        guard pointer == nil else {
+            return pointer
+        }
+
+        pointer = unsafeBitCast(self.getProcAddress(name: "vkCmdDrawIndexedIndirectCountAMD"),
+                                to: vkCmdDrawIndexedIndirectCountPointer?.self)
+
+        guard pointer == nil else {
+            return pointer
+        }
+
+        return unsafeBitCast(self.getProcAddress(name: "vkCmdDrawIndexedIndirectCountKHR"),
+                             to: vkCmdDrawIndexedIndirectCountPointer?.self)
+    }()
 
     public convenience init() {
         var createInfo = VkInstanceCreateInfo()
@@ -41,6 +68,11 @@ public final class VulkanInstance {
            }
         }
 
-        return physicalDevices.map { VulkanPhysicalDevice(physicalDevice: $0!) }
+        return physicalDevices.map { VulkanPhysicalDevice(instance: self,
+                                                          physicalDevice: $0!) }
+    }
+
+    public func getProcAddress(name: String) -> @convention (c) () -> Void {
+        return name.withCString { vkGetInstanceProcAddr(self.instance, $0) }
     }
 }

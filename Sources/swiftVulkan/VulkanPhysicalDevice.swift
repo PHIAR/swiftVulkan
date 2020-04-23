@@ -2,9 +2,12 @@ import vulkan
 import Foundation
 
 public final class VulkanPhysicalDevice {
+    private let instance: VulkanInstance
     private let physicalDevice: VkPhysicalDevice
 
-    internal init(physicalDevice: VkPhysicalDevice) {
+    internal init(instance: VulkanInstance,
+                  physicalDevice: VkPhysicalDevice) {
+        self.instance = instance
         self.physicalDevice = physicalDevice
     }
 
@@ -48,7 +51,8 @@ public final class VulkanPhysicalDevice {
                     preconditionFailure()
                 }
 
-                return VulkanDevice(device: device!)
+                return VulkanDevice(physicalDevice: self,
+                                    device: device!)
             }(queueCreateInfos,
               enabledLayerNames,
               enabledExtensionNames)
@@ -57,6 +61,10 @@ public final class VulkanPhysicalDevice {
             enabledExtensionNames.forEach { free(UnsafeMutableRawPointer(mutating: $0)) }
             return device
         }
+    }
+
+    public func getInstance() -> VulkanInstance {
+        return self.instance
     }
 
     public func getPhysicalDeviceMemoryProperties() -> VkPhysicalDeviceMemoryProperties {

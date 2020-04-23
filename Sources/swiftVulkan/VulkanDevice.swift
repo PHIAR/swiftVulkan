@@ -2,9 +2,12 @@ import vulkan
 import Foundation
 
 public final class VulkanDevice {
+    private let physicalDevice: VulkanPhysicalDevice
     private let device: VkDevice
 
-    public init(device: VkDevice) {
+    public init(physicalDevice: VulkanPhysicalDevice,
+                device: VkDevice) {
+        self.physicalDevice = physicalDevice
         self.device = device
     }
 
@@ -68,7 +71,7 @@ public final class VulkanDevice {
             preconditionFailure()
         }
 
-        return VulkanCommandPool(device: self.device,
+        return VulkanCommandPool(device: self,
                                  commandPool: commandPool!)
     }
 
@@ -317,6 +320,10 @@ public final class VulkanDevice {
 
         vkGetDeviceQueue(self.device, UInt32(queueFamily), UInt32(queue), &_queue)
         return VulkanQueue(queue: _queue!)
+    }
+
+    public func getPhysicalDevice() -> VulkanPhysicalDevice {
+        return self.physicalDevice
     }
 
     public func resetFences(fences: [VulkanFence]) {

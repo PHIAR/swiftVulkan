@@ -2,10 +2,10 @@ import vulkan
 import Foundation
 
 public final class VulkanCommandBuffer {
-    private let device: VkDevice
+    private let device: VulkanDevice
     private let commandBuffer: VkCommandBuffer
 
-    public init(device: VkDevice,
+    public init(device: VulkanDevice,
                 commandBuffer: VkCommandBuffer) {
         self.device = device
         self.commandBuffer = commandBuffer
@@ -239,6 +239,8 @@ public final class VulkanCommandBuffer {
                                          countBufferOffset: Int,
                                          maxDrawCount: Int,
                                          stride: Int) {
+        let vkCmdDrawIndexedIndirectCount = self.device.getPhysicalDevice().getInstance().vkCmdDrawIndexedIndirectCount!
+
         vkCmdDrawIndexedIndirectCount(self.commandBuffer,
                                       buffer.getBuffer(),
                                       VkDeviceSize(offset),

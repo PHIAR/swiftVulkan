@@ -31,15 +31,48 @@ public final class VulkanInstance {
                              to: vkCmdDrawIndexedIndirectCountPointer?.self)
     }()
 
-    public convenience init() {
-        var createInfo = VkInstanceCreateInfo()
-        var instance: VkInstance? = nil
+    public convenience init(applicationInfo: VkApplicationInfo = VkApplicationInfo(),
+                            layerNames: [String] = [],
+                            extensions: [String] = []) {
+        var _applicationInfo = applicationInfo
+        let _layerNames = layerNames.map { $0.withCString { UnsafePointer(strdup($0)) }}
+        let _extensions = extensions.map { $0.withCString { UnsafePointer(strdup($0)) }}
+        let instance: VkInstance = { (pApplicationInfo: UnsafePointer <VkApplicationInfo>,
+                                      layerNames: UnsafePointer <UnsafePointer <CChar>?>,
+                                      layerCount: Int,
+                                      extensions: UnsafePointer <UnsafePointer <CChar>?>,
+                                      extensionCount: Int) in
+            var info = VkInstanceCreateInfo()
 
-        guard vkCreateInstance(&createInfo, nil, &instance) == VK_SUCCESS else {
-            preconditionFailure()
+            info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+            info.pApplicationInfo = pApplicationInfo
+            info.enabledLayerCount = UInt32(layerCount)
+            info.ppEnabledLayerNames = layerNames
+            info.enabledExtensionCount = UInt32(extensionCount)
+            info.ppEnabledExtensionNames = extensions
+
+            var instance: VkInstance? = nil
+
+            guard vkCreateInstance(&info, nil, &instance) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+
+            return instance!
+        }(&_applicationInfo,
+          _layerNames,
+          layerNames.count,
+          _extensions,
+          extensions.count)
+
+        for _extension in _extensions {
+            free(UnsafeMutableRawPointer(mutating: _extension))
         }
 
-        self.init(instance: instance!)
+        for _layerName in _layerNames {
+            free(UnsafeMutableRawPointer(mutating: _layerName))
+        }
+
+        self.init(instance: instance)
     }
 
     public init(instance: VkInstance) {

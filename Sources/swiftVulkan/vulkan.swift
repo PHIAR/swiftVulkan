@@ -355,6 +355,16 @@ public final class VulkanCommandBuffer {
                              flags)
     }
 
+    public func setViewport(firstViewport: Int = 0,
+                            viewports: [VkViewport]) {
+        viewports.withUnsafeBytes { _viewports in
+            vkCmdSetViewport(self.commandBuffer,
+                             UInt32(firstViewport),
+                             UInt32(viewports.count),
+                             _viewports.baseAddress!.assumingMemoryBound(to: VkViewport.self))
+        }
+    }
+
     public func updateBuffer(dstBuffer: VulkanBuffer,
                              dstOffset: Int,
                              data: UnsafeRawBufferPointer) {

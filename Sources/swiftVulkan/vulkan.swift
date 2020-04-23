@@ -349,6 +349,11 @@ public final class VulkanCommandBuffer {
                            UInt32(values.count),
                            values.baseAddress!)
     }
+
+    public func reset(flags: VkCommandBufferResetFlags) {
+        vkResetCommandBuffer(self.commandBuffer,
+                             flags)
+    }
 }
 
 public final class VulkanCommandPool {

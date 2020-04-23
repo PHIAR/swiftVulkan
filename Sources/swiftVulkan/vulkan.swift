@@ -721,6 +721,13 @@ public final class VulkanPhysicalDevice {
         }
     }
 
+    public func getPhysicalDeviceMemoryProperties() -> VkPhysicalDeviceMemoryProperties {
+        var physicalDeviceMemoryProperties = VkPhysicalDeviceMemoryProperties()
+
+        vkGetPhysicalDeviceMemoryProperties(self.physicalDevice, &physicalDeviceMemoryProperties)
+        return physicalDeviceMemoryProperties
+    }
+
     public func getPhysicalDeviceProperties() -> VkPhysicalDeviceProperties {
         var physicalDeviceProperties = VkPhysicalDeviceProperties()
 

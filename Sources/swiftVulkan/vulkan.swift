@@ -37,6 +37,25 @@ public final class VulkanBuffer {
     }
 }
 
+public final class VulkanBufferView {
+    private let device: VkDevice
+    private let bufferView: VkBufferView
+
+    public init(device: VkDevice,
+                bufferView: VkBufferView) {
+        self.device = device
+        self.bufferView = bufferView
+    }
+
+    deinit {
+        vkDestroyBufferView(self.device, self.bufferView, nil)
+    }
+
+    public func getBufferView() -> VkBufferView {
+        return self.bufferView
+    }
+}
+
 public final class VulkanBufferMemoryBarrier: VulkanMemoryBarrier {
     public var srcQueueFamilyIndex: UInt32
     public var dstQueueFamilyIndex: UInt32

@@ -115,13 +115,6 @@ public final class VulkanCommandBuffer {
         }
     }
 
-    public func bindPipeline(pipelineBindPoint: VkPipelineBindPoint,
-                             pipeline: VulkanPipeline) {
-        vkCmdBindPipeline(self.commandBuffer,
-                          pipelineBindPoint,
-                          pipeline.getPipeline())
-    }
-
     public func bindIndexBuffer(buffer: VulkanBuffer,
                                 offset: Int,
                                 indexType: VkIndexType) {
@@ -129,6 +122,32 @@ public final class VulkanCommandBuffer {
                              buffer.getBuffer(),
                              VkDeviceSize(offset),
                              indexType)
+    }
+
+    public func bindPipeline(pipelineBindPoint: VkPipelineBindPoint,
+                             pipeline: VulkanPipeline) {
+        vkCmdBindPipeline(self.commandBuffer,
+                          pipelineBindPoint,
+                          pipeline.getPipeline())
+    }
+
+    public func bindVertexBuffers(firstBinding: Int,
+                                  buffers: [VulkanBuffer?],
+                                  offsets: [Int]) {
+        precondition(buffers.count == offsets.count, "Buffer and offset counts do not match.")
+
+        let bindingBuffers = buffers.map { $0?.getBuffer() }
+        let bindingOffsets = offsets.map { VkDeviceSize($0) }
+
+        bindingBuffers.withUnsafeBytes { _buffers in
+            bindingOffsets.withUnsafeBytes { _offsets in
+                vkCmdBindVertexBuffers(self.commandBuffer,
+                                       UInt32(firstBinding),
+                                       UInt32(buffers.count),
+                                       _buffers.baseAddress!.assumingMemoryBound(to: VkBuffer?.self),
+                                       _offsets.baseAddress!.assumingMemoryBound(to: VkDeviceSize.self))
+            }
+        }
     }
 
     public func clearColor(image: VulkanImage,

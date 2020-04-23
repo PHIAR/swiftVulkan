@@ -216,6 +216,20 @@ public final class VulkanCommandBuffer {
         }
     }
 
+    public func copyBufferToImage(srcBuffer: VulkanBuffer,
+                                  dstImage: VulkanImage,
+                                  dstImageLayout: VkImageLayout,
+                                  regions: [VkBufferImageCopy]) {
+        regions.withUnsafeBytes { _regions in
+            vkCmdCopyBufferToImage(self.commandBuffer,
+                                   srcBuffer.getBuffer(),
+                                   dstImage.getImage(),
+                                   dstImageLayout,
+                                   UInt32(regions.count),
+                                  _regions.baseAddress!.assumingMemoryBound(to: VkBufferImageCopy.self))
+        }
+    }
+
     public func dispatch(groupCountX: Int,
                          groupCountY: Int,
                          groupCountZ: Int) {

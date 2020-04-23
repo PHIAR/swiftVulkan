@@ -1,7 +1,7 @@
 import vulkan
 import Foundation
 
-public class VulkanBuffer {
+public final class VulkanBuffer {
     private let device: VkDevice
     private let buffer: VkBuffer
 
@@ -18,9 +18,16 @@ public class VulkanBuffer {
     public func getBuffer() -> VkBuffer {
         return self.buffer
     }
+
+    public func getBufferMemoryRequirements() -> VkMemoryRequirements {
+        var memoryRequirements = VkMemoryRequirements()
+
+        vkGetBufferMemoryRequirements(self.device, self.buffer, &memoryRequirements)
+        return memoryRequirements
+    }
 }
 
-public class VulkanBufferMemoryBarrier: VulkanMemoryBarrier {
+public final class VulkanBufferMemoryBarrier: VulkanMemoryBarrier {
     public var srcQueueFamilyIndex: UInt32
     public var dstQueueFamilyIndex: UInt32
     public var buffer: VkBuffer
@@ -202,6 +209,24 @@ public final class VulkanDevice {
 
     deinit {
         vkDestroyDevice(self.device, nil)
+    }
+
+    public func allocateMemory(size: Int,
+                               memoryTypeIndex: Int) -> VulkanDeviceMemory {
+        var allocateInfo = VkMemoryAllocateInfo()
+
+        allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO
+        allocateInfo.allocationSize = VkDeviceSize(size)
+        allocateInfo.memoryTypeIndex = UInt32(memoryTypeIndex)
+
+        var deviceMemory: VkDeviceMemory? = nil
+
+        guard vkAllocateMemory(self.device, &allocateInfo, nil, &deviceMemory) == VK_SUCCESS else {
+            preconditionFailure()
+        }
+
+        return VulkanDeviceMemory(device: self.device,
+                                  deviceMemory: deviceMemory!)
     }
 
     public func createBuffer(size: Int,
@@ -481,6 +506,10 @@ public final class VulkanDevice {
                                swapchain: swapchain!)
     }
 
+    public func getDevice() -> VkDevice {
+        return self.device
+    }
+
     public func getDeviceQueue(queueFamily: Int,
                                queue: Int) -> VulkanQueue {
         var _queue: VkQueue? = nil
@@ -522,6 +551,45 @@ public final class VulkanDevice {
         guard vkDeviceWaitIdle(self.device) == VK_SUCCESS else {
             preconditionFailure()
         }
+    }
+}
+
+public final class VulkanDeviceMemory {
+    private let device: VkDevice
+    private let deviceMemory: VkDeviceMemory
+
+    public init(device: VkDevice,
+                deviceMemory: VkDeviceMemory) {
+        self.device = device
+        self.deviceMemory = deviceMemory
+    }
+
+    deinit {
+        vkFreeMemory(self.device, self.deviceMemory, nil)
+    }
+
+    public func getDeviceMemory() -> VkDeviceMemory {
+        return self.deviceMemory
+    }
+
+    public func map(offset: Int = 0,
+                    size: Int = Int(VK_WHOLE_SIZE)) -> UnsafeMutableRawPointer {
+        var pointer: UnsafeMutableRawPointer? = nil
+
+        guard vkMapMemory(self.device,
+                          self.deviceMemory,
+                          VkDeviceSize(offset),
+                          VkDeviceSize(size),
+                          0,
+                          &pointer) == VK_SUCCESS else {
+            preconditionFailure()
+        }
+
+        return pointer!
+    }
+
+    public func unmap() {
+        vkUnmapMemory(self.device, self.deviceMemory)
     }
 }
 
@@ -582,7 +650,7 @@ public final class VulkanImage {
     }
 }
 
-public class VulkanImageMemoryBarrier: VulkanMemoryBarrier {
+public final class VulkanImageMemoryBarrier: VulkanMemoryBarrier {
     public var oldLayout: VkImageLayout
     public var newLayout: VkImageLayout
     public var srcQueueFamilyIndex: Int

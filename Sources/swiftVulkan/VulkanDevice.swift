@@ -104,6 +104,36 @@ public final class VulkanDevice {
                                  commandPool: commandPool!)
     }
 
+    public func createComputePipeline(pipelineCache: VulkanPipelineCache? = nil,
+                                      flags: VkPipelineCreateFlags,
+                                      stage: VulkanPipelineShaderStage,
+                                      layout: VulkanPipelineLayout,
+                                      basePipelineHandle: VulkanPipeline? = nil,
+                                      basePipelineIndex: Int = 0) -> VulkanPipeline {
+        var computePipelineCreateInfo = VkComputePipelineCreateInfo()
+
+        computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+        computePipelineCreateInfo.flags = flags
+        computePipelineCreateInfo.stage = stage.getPipelineShaderStageCreateInfo()
+        computePipelineCreateInfo.layout = layout.getPipelineLayout()
+        computePipelineCreateInfo.basePipelineHandle = basePipelineHandle?.getPipeline()
+        computePipelineCreateInfo.basePipelineIndex = Int32(basePipelineIndex)
+
+        var pipeline: VkPipeline? = nil
+
+        guard vkCreateComputePipelines(self.device,
+                                       pipelineCache?.getPipelineCache(),
+                                       1,
+                                       &computePipelineCreateInfo,
+                                       nil,
+                                       &pipeline) == VK_SUCCESS else {
+            preconditionFailure()
+        }
+
+        return VulkanPipeline(device: self.device,
+                              pipeline: pipeline!)
+    }
+
     public func createDescriptorPool(flags: VkDescriptorPoolCreateFlags,
                                      maxSets: Int,
                                      poolSizes: [VkDescriptorPoolSize]) -> VulkanDescriptorPool {
@@ -126,6 +156,32 @@ public final class VulkanDevice {
 
             return VulkanDescriptorPool(device: self.device,
                                         descriptorPool: descriptorPool!)
+        }
+    }
+
+    public func createDescriptorSetLayout(flags: VkDescriptorSetLayoutCreateFlags,
+                                          bindings: [VulkanDescriptorSetLayoutBinding]) -> VulkanDescriptorSetLayout {
+        let descriptorBindings = bindings.map { $0.getDescriptorSetLayoutBinding() }
+
+        return descriptorBindings.withUnsafeBytes { _bindings in
+            var descriptorSetLayoutCreateInfo = VkDescriptorSetLayoutCreateInfo()
+
+            descriptorSetLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO
+            descriptorSetLayoutCreateInfo.flags = flags
+            descriptorSetLayoutCreateInfo.bindingCount = UInt32(bindings.count)
+            descriptorSetLayoutCreateInfo.pBindings = _bindings.baseAddress!.assumingMemoryBound(to: VkDescriptorSetLayoutBinding.self)
+
+            var descriptorSetLayout: VkDescriptorSetLayout? = nil
+
+            guard vkCreateDescriptorSetLayout(self.device,
+                                            &descriptorSetLayoutCreateInfo,
+                                            nil,
+                                            &descriptorSetLayout) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+
+            return VulkanDescriptorSetLayout(device: self.device,
+                                            descriptorSetLayout: descriptorSetLayout!)
         }
     }
 
@@ -206,36 +262,6 @@ public final class VulkanDevice {
 
         return VulkanImageView(device: self.device,
                                imageView: imageView!)
-    }
-
-    public func createComputePipeline(pipelineCache: VulkanPipelineCache? = nil,
-                                      flags: VkPipelineCreateFlags,
-                                      stage: VulkanPipelineShaderStage,
-                                      layout: VulkanPipelineLayout,
-                                      basePipelineHandle: VulkanPipeline? = nil,
-                                      basePipelineIndex: Int = 0) -> VulkanPipeline {
-        var computePipelineCreateInfo = VkComputePipelineCreateInfo()
-
-        computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
-        computePipelineCreateInfo.flags = flags
-        computePipelineCreateInfo.stage = stage.getPipelineShaderStageCreateInfo()
-        computePipelineCreateInfo.layout = layout.getPipelineLayout()
-        computePipelineCreateInfo.basePipelineHandle = basePipelineHandle?.getPipeline()
-        computePipelineCreateInfo.basePipelineIndex = Int32(basePipelineIndex)
-
-        var pipeline: VkPipeline? = nil
-
-        guard vkCreateComputePipelines(self.device,
-                                       pipelineCache?.getPipelineCache(),
-                                       1,
-                                       &computePipelineCreateInfo,
-                                       nil,
-                                       &pipeline) == VK_SUCCESS else {
-            preconditionFailure()
-        }
-
-        return VulkanPipeline(device: self.device,
-                              pipeline: pipeline!)
     }
 
     public func createGraphicsPipeline(pipelineCache: VulkanPipelineCache? = nil,

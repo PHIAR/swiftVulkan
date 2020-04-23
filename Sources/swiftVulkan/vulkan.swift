@@ -132,6 +132,30 @@ public final class VulkanCommandBuffer {
         }
     }
 
+    public func draw(vertexCount: Int,
+                     instanceCount: Int,
+                     firstVertex: Int,
+                     firstInstance: Int) {
+        vkCmdDraw(self.commandBuffer,
+                  UInt32(vertexCount),
+                  UInt32(instanceCount),
+                  UInt32(firstVertex),
+                  UInt32(firstInstance))
+    }
+
+    public func drawIndexed(indexCount: Int,
+                            instanceCount: Int,
+                            firstIndex: Int,
+                            vertexOffset: Int,
+                            firstInstance: Int) {
+        vkCmdDrawIndexed(self.commandBuffer,
+                         UInt32(indexCount),
+                         UInt32(instanceCount),
+                         UInt32(firstIndex),
+                         Int32(vertexOffset),
+                         UInt32(firstInstance))
+    }
+
     public func end() {
         guard vkEndCommandBuffer(self.commandBuffer) == VK_SUCCESS else {
             preconditionFailure()

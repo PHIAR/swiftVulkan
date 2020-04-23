@@ -187,6 +187,32 @@ public final class VulkanCommandBuffer {
                          UInt32(firstInstance))
     }
 
+    public func drawIndexedIndirect(buffer: VulkanBuffer,
+                                    offset: Int,
+                                    drawCount: Int,
+                                    stride: Int) {
+        vkCmdDrawIndexedIndirect(self.commandBuffer,
+                                 buffer.getBuffer(),
+                                 VkDeviceSize(offset),
+                                 UInt32(drawCount),
+                                 UInt32(stride))
+    }
+
+    public func drawIndexedIndirectCount(buffer: VulkanBuffer,
+                                         offset: Int,
+                                         countBuffer: VulkanBuffer,
+                                         countBufferOffset: Int,
+                                         maxDrawCount: Int,
+                                         stride: Int) {
+        vkCmdDrawIndexedIndirectCount(self.commandBuffer,
+                                      buffer.getBuffer(),
+                                      VkDeviceSize(offset),
+                                      countBuffer.getBuffer(),
+                                      VkDeviceSize(countBufferOffset),
+                                      UInt32(maxDrawCount),
+                                      UInt32(stride))
+    }
+
     public func end() {
         guard vkEndCommandBuffer(self.commandBuffer) == VK_SUCCESS else {
             preconditionFailure()

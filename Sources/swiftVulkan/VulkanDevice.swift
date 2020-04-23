@@ -75,6 +75,31 @@ public final class VulkanDevice {
                                  commandPool: commandPool!)
     }
 
+    public func createDescriptorPool(flags: VkDescriptorPoolCreateFlags,
+                                     maxSets: Int,
+                                     poolSizes: [VkDescriptorPoolSize]) -> VulkanDescriptorPool {
+        return poolSizes.withUnsafeBytes { _poolSizes in
+            var descriptorPoolCreateInfo = VkDescriptorPoolCreateInfo()
+
+            descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO
+            descriptorPoolCreateInfo.flags = flags
+            descriptorPoolCreateInfo.poolSizeCount = UInt32(poolSizes.count)
+            descriptorPoolCreateInfo.pPoolSizes = _poolSizes.baseAddress!.assumingMemoryBound(to: VkDescriptorPoolSize.self)
+
+            var descriptorPool: VkDescriptorPool? = nil
+
+            guard vkCreateDescriptorPool(self.device,
+                                         &descriptorPoolCreateInfo,
+                                         nil,
+                                         &descriptorPool) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+
+            return VulkanDescriptorPool(device: self.device,
+                                        descriptorPool: descriptorPool!)
+        }
+    }
+
     public func createFence(flags: VkFenceCreateFlags = VK_FENCE_CREATE_SIGNALED_BIT.rawValue) -> VulkanFence {
         var fenceCreateInfo = VkFenceCreateInfo()
 

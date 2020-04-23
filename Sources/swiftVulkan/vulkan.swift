@@ -1,6 +1,25 @@
 import vulkan
 import Foundation
 
+public class VulkanBuffer {
+    private let device: VkDevice
+    private let buffer: VkBuffer
+
+    public init(device: VkDevice,
+                buffer: VkBuffer) {
+        self.device = device
+        self.buffer = buffer
+    }
+
+    deinit {
+        vkDestroyBuffer(self.device, self.buffer, nil)
+    }
+
+    public func getBuffer() -> VkBuffer {
+        return self.buffer
+    }
+}
+
 public class VulkanBufferMemoryBarrier: VulkanMemoryBarrier {
     public var srcQueueFamilyIndex: UInt32
     public var dstQueueFamilyIndex: UInt32
@@ -183,6 +202,31 @@ public final class VulkanDevice {
 
     deinit {
         vkDestroyDevice(self.device, nil)
+    }
+
+    public func createBuffer(size: Int,
+                             usage: VkBufferUsageFlags,
+                             sharingMode: VkSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+                             queueFamilies: [Int]) -> VulkanBuffer {
+        return queueFamilies.map { UInt32($0) }.withUnsafeBytes { _queueFamilies in
+            var bufferCreateInfo = VkBufferCreateInfo()
+
+            bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO
+            bufferCreateInfo.size = VkDeviceSize(size)
+            bufferCreateInfo.usage = usage
+            bufferCreateInfo.sharingMode = sharingMode
+            bufferCreateInfo.queueFamilyIndexCount = UInt32(queueFamilies.count)
+            bufferCreateInfo.pQueueFamilyIndices = _queueFamilies.baseAddress!.assumingMemoryBound(to: UInt32.self)
+
+            var buffer: VkBuffer? = nil
+
+            guard vkCreateBuffer(self.device, &bufferCreateInfo, nil, &buffer) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+
+            return VulkanBuffer(device: self.device,
+                                buffer: buffer!)
+        }
     }
 
     public func createCommandPool(queue: Int) -> VulkanCommandPool {

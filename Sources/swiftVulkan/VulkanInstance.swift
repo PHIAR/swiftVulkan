@@ -2,6 +2,13 @@ import vulkan
 import Foundation
 
 public final class VulkanInstance {
+    public typealias vkCmdDispatchBasePointer = @convention (c) (_ commandBuffer: VkCommandBuffer,
+                                                                 _ baseGroupX: UInt32,
+                                                                 _ baseGroupY: UInt32,
+                                                                 _ baseGroupZ: UInt32,
+                                                                 _ groupCountX: UInt32,
+                                                                 _ groupCountY: UInt32,
+                                                                 _ groupCountZ: UInt32) -> Void
     public typealias vkCmdDrawIndexedIndirectCountPointer = @convention (c) (_ commandBuffer: VkCommandBuffer,
                                                                              _ buffer: VkBuffer,
                                                                              _ offset: VkDeviceSize,
@@ -11,6 +18,18 @@ public final class VulkanInstance {
                                                                              _ stride: UInt32) -> Void
 
     private let instance: VkInstance
+
+    public lazy var vkCmdDispatchBase: vkCmdDispatchBasePointer? = {
+        var pointer = unsafeBitCast(self.getProcAddress(name: "vkCmdDispatchBase"),
+                                    to: vkCmdDispatchBasePointer?.self)
+
+        guard pointer == nil else {
+            return pointer
+        }
+
+        return unsafeBitCast(self.getProcAddress(name: "vkCmdDispatchBaseKHR"),
+                             to: vkCmdDispatchBasePointer?.self)
+    }()
 
     public lazy var vkCmdDrawIndexedIndirectCount: vkCmdDrawIndexedIndirectCountPointer? = {
         var pointer = unsafeBitCast(self.getProcAddress(name: "vkCmdDrawIndexedIndirectCount"),

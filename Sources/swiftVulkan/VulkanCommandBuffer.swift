@@ -182,6 +182,8 @@ public final class VulkanCommandBuffer {
                              groupCountX: Int,
                              groupCountY: Int,
                              groupCountZ: Int) {
+        let vkCmdDispatchBase = self.device.getPhysicalDevice().getInstance().vkCmdDispatchBase!
+
         vkCmdDispatchBase(self.commandBuffer,
                           UInt32(baseGroupX),
                           UInt32(baseGroupY),

@@ -318,22 +318,28 @@ public final class VulkanDevice {
                               pipeline: pipeline!)
     }
 
-    public func createPipelineLayout(pushConstantRanges: [VkPushConstantRange] = []) -> VulkanPipelineLayout {
-        return pushConstantRanges.withUnsafeBytes { _pushConstantRanges in
-            var pipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo()
+    public func createPipelineLayout(descriptorSetLayouts: [VulkanDescriptorSetLayout],
+                                     pushConstantRanges: [VkPushConstantRange] = []) -> VulkanPipelineLayout {
+        let pipelineDescriptorSetLayouts = descriptorSetLayouts.map { $0.getDescriptorSetLayout() }
+        return pipelineDescriptorSetLayouts.withUnsafeBytes { _descriptorSetLayouts in
+            pushConstantRanges.withUnsafeBytes { _pushConstantRanges in
+                var pipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo()
 
-            pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
-            pipelineLayoutCreateInfo.pushConstantRangeCount = UInt32(pushConstantRanges.count)
-            pipelineLayoutCreateInfo.pPushConstantRanges = _pushConstantRanges.baseAddress!.assumingMemoryBound(to: VkPushConstantRange.self)
+                pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
+                pipelineLayoutCreateInfo.setLayoutCount = UInt32(descriptorSetLayouts.count)
+                pipelineLayoutCreateInfo.pSetLayouts = _descriptorSetLayouts.baseAddress!.assumingMemoryBound(to: VkDescriptorSetLayout?.self)
+                pipelineLayoutCreateInfo.pushConstantRangeCount = UInt32(pushConstantRanges.count)
+                pipelineLayoutCreateInfo.pPushConstantRanges = _pushConstantRanges.baseAddress!.assumingMemoryBound(to: VkPushConstantRange.self)
 
-            var pipelineLayout: VkPipelineLayout? = nil
+                var pipelineLayout: VkPipelineLayout? = nil
 
-            guard vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nil, &pipelineLayout) == VK_SUCCESS else {
-                preconditionFailure()
+                guard vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nil, &pipelineLayout) == VK_SUCCESS else {
+                    preconditionFailure()
+                }
+
+                return VulkanPipelineLayout(device: self.device,
+                                            pipelineLayout: pipelineLayout!)
             }
-
-            return VulkanPipelineLayout(device: self.device,
-                                        pipelineLayout: pipelineLayout!)
         }
     }
 

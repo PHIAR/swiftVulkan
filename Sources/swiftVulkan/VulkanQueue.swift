@@ -35,9 +35,7 @@ public final class VulkanQueue {
         }
     }
 
-    public func submit(waitSemaphoresValues: [UInt64] = [],
-                       semaphoresValues: [UInt64] = [],
-                       waitSemaphores: [VulkanSemaphore],
+    public func submit(waitSemaphores: [VulkanSemaphore],
                        waitDstStageMask: [VkPipelineStageFlags],
                        commandBuffers: [VulkanCommandBuffer],
                        signalSemaphores: [VulkanSemaphore],

@@ -321,6 +321,13 @@ public final class VulkanCommandBuffer {
                              flags)
     }
 
+    public func set(event: VulkanEvent,
+                    stage: VkPipelineStageFlags) {
+        vkCmdSetEvent(self.commandBuffer,
+                      event.getEvent(),
+                      stage)
+    }
+
     public func setScissor(firstScissor: Int = 0,
                            scissors: [VkRect2D]) {
         scissors.withUnsafeBytes { _scissors in
@@ -349,5 +356,35 @@ public final class VulkanCommandBuffer {
                           VkDeviceSize(dstOffset),
                           VkDeviceSize(data.count),
                           data.baseAddress!)
+    }
+    public func waitEvents(events: [VulkanEvent],
+                           srcStageMask: VkPipelineStageFlags,
+                           dstStageMask: VkPipelineStageFlags,
+                           memoryBarriers: [VulkanMemoryBarrier],
+                           bufferMemoryBarriers: [VulkanBufferMemoryBarrier],
+                           imageMemoryBarriers: [VulkanImageMemoryBarrier]) {
+        let waitEvents = events.map { $0.getEvent() }
+        let waitMemoryBarriers = memoryBarriers.map { $0.getMemoryBarrier() }
+        let waitBufferMemoryBarriers = bufferMemoryBarriers.map { $0.getBufferMemoryBarrier() }
+        let waitImageMemoryBarriers = imageMemoryBarriers.map { $0.getImageMemoryBarrier() }
+        let _ = waitEvents.withUnsafeBytes { _events in
+            let _ = waitMemoryBarriers.withUnsafeBytes { _memoryBarriers in
+                let _ = waitBufferMemoryBarriers.withUnsafeBytes { _bufferMemoryBarriers in
+                    let _ = waitImageMemoryBarriers.withUnsafeBytes { _imageMemoryBarriers in
+                        vkCmdWaitEvents(self.commandBuffer,
+                                        UInt32(events.count),
+                                        _events.baseAddress!.assumingMemoryBound(to: VkEvent?.self),
+                                        srcStageMask,
+                                        dstStageMask,
+                                        UInt32(memoryBarriers.count),
+                                        _memoryBarriers.baseAddress!.assumingMemoryBound(to: VkMemoryBarrier.self),
+                                        UInt32(bufferMemoryBarriers.count),
+                                        _bufferMemoryBarriers.baseAddress!.assumingMemoryBound(to: VkBufferMemoryBarrier.self),
+                                        UInt32(imageMemoryBarriers.count),
+                                        _imageMemoryBarriers.baseAddress!.assumingMemoryBound(to: VkImageMemoryBarrier.self))
+                    }
+                }
+            }
+        }
     }
 }

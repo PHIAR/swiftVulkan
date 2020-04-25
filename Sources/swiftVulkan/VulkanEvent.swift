@@ -15,7 +15,19 @@ public final class VulkanEvent {
         vkDestroyEvent(self.device, self.event, nil)
     }
 
-    public func getFence() -> VkEvent {
+    public func getEventStatus() -> Bool {
+        return vkGetEventStatus(self.device, self.event) == VK_EVENT_SET
+    }
+
+    public func getEvent() -> VkEvent {
         return self.event
+    }
+
+    public func resetEvent() {
+        vkResetEvent(self.device, self.event)
+    }
+
+    public func setEvent() {
+        vkSetEvent(self.device, self.event)
     }
 }

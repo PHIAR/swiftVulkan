@@ -25,4 +25,13 @@ public final class VulkanSemaphore {
     public func getSemaphore() -> VkSemaphore {
         return self.semaphore
     }
+
+    public func signal(value: UInt64) {
+        var signalInfo = VkSemaphoreSignalInfo()
+
+        signalInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SIGNAL_INFO
+        signalInfo.semaphore = self.semaphore
+        signalInfo.value = value
+        vkSignalSemaphore(self.device, &signalInfo)
+    }
 }

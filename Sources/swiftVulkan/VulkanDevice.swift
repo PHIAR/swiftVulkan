@@ -372,19 +372,27 @@ public final class VulkanDevice {
                                 renderPass: renderPass!)
     }
 
-    public func createSemaphore() -> VulkanSemaphore {
-        var semaphoreCreateInfo = VkSemaphoreCreateInfo()
+    public func createSemaphore(type: VkSemaphoreType = VK_SEMAPHORE_TYPE_TIMELINE) -> VulkanSemaphore {
+        var semaphoreTypeCreateInfo = VkSemaphoreTypeCreateInfo()
 
-        semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+        semaphoreTypeCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO
+        semaphoreTypeCreateInfo.semaphoreType = semaphore
 
-        var semaphore: VkSemaphore? = nil
+        return { (_semaphoreTypeCreateInfo: UnsafeRawPointer) in
+            var semaphoreCreateInfo = VkSemaphoreCreateInfo()
 
-        guard vkCreateSemaphore(self.device, &semaphoreCreateInfo, nil, &semaphore) == VK_SUCCESS else {
-            preconditionFailure()
-        }
+            semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+            semaphoreCreateInfo.pNext = _semaphoreTypeCreateInfo
 
-        return VulkanSemaphore(device: device,
-                               semaphore: semaphore!)
+            var semaphore: VkSemaphore? = nil
+
+            guard vkCreateSemaphore(self.device, &semaphoreCreateInfo, nil, &semaphore) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+
+            return VulkanSemaphore(device: device,
+                                semaphore: semaphore!)
+        }(&semaphoreTypeCreateInfo)
     }
 
     public func createShaderModule(code: Data) -> VulkanShaderModule {

@@ -18,7 +18,9 @@ public final class VulkanSemaphore {
     public func getCounterValue() -> UInt64 {
         var counterValue = UInt64(0)
 
+    #if false
         vkGetSemaphoreCounterValue(self.device, self.semaphore, &counterValue)
+    #endif
         return counterValue
     }
 

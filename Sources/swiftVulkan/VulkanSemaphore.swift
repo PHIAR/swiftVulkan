@@ -15,10 +15,11 @@ public final class VulkanSemaphore {
         vkDestroySemaphore(self.device, self.semaphore, nil)
     }
 
-    public getCounterValue() -> UInt64 {
+    public func getCounterValue() -> UInt64 {
         var counterValue = UInt64(0)
 
         vkGetSemaphoreCounterValue(self.device, self.semaphore, &counterValue)
+        return counterValue
     }
 
     public func getSemaphore() -> VkSemaphore {

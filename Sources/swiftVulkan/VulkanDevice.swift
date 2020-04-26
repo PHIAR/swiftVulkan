@@ -134,7 +134,7 @@ public final class VulkanDevice {
                               pipeline: pipeline!)
     }
 
-    public func createDescriptorPool(flags: VkDescriptorPoolCreateFlags,
+    public func createDescriptorPool(flags: VkDescriptorPoolCreateFlags = 0,
                                      maxSets: Int,
                                      poolSizes: [VkDescriptorPoolSize]) -> VulkanDescriptorPool {
         return poolSizes.withUnsafeBytes { _poolSizes in
@@ -159,7 +159,7 @@ public final class VulkanDevice {
         }
     }
 
-    public func createDescriptorSetLayout(flags: VkDescriptorSetLayoutCreateFlags,
+    public func createDescriptorSetLayout(flags: VkDescriptorSetLayoutCreateFlags = 0,
                                           bindings: [VulkanDescriptorSetLayoutBinding]) -> VulkanDescriptorSetLayout {
         let descriptorBindings = bindings.map { $0.getDescriptorSetLayoutBinding() }
 

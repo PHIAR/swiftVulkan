@@ -243,6 +243,47 @@ public final class VulkanDevice {
                                  framebuffer: framebuffer!)
     }
 
+    public func createImage(flags: VkImageCreateFlags,
+                            imageType: VulkanImageType,
+                            format: VulkanFormat,
+                            extent: VkExtent3D,
+                            mipLevels: Int,
+                            arrayLayers: Int,
+                            samples: VkSampleCountFlagBits = VK_SAMPLE_COUNT_1_BIT,
+                            tiling: VkImageTiling = VK_IMAGE_TILING_OPTIMAL,
+                            usage: VkImageUsageFlags,
+                            sharingMode: VkSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+                            queueFamilies: [Int],
+                            initialLayout: VkImageLayout = VK_IMAGE_LAYOUT_UNDEFINED) -> VulkanImage {
+        return queueFamilies.map { UInt32($0) }.withUnsafeBytes { _queueFamilies in
+            var imageCreateInfo = VkImageCreateInfo()
+
+            imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO
+            imageCreateInfo.flags = flags
+            imageCreateInfo.imageType = imageType.toVkImageType()
+            imageCreateInfo.format = format.toVkFormat()
+            imageCreateInfo.extent = extent
+            imageCreateInfo.mipLevels = UInt32(mipLevels)
+            imageCreateInfo.arrayLayers = UInt32(arrayLayers)
+            imageCreateInfo.samples = samples
+            imageCreateInfo.tiling = tiling
+            imageCreateInfo.usage = usage
+            imageCreateInfo.sharingMode = sharingMode
+            imageCreateInfo.queueFamilyIndexCount = UInt32(queueFamilies.count)
+            imageCreateInfo.pQueueFamilyIndices = _queueFamilies.baseAddress!.assumingMemoryBound(to: UInt32.self)
+            imageCreateInfo.initialLayout = initialLayout
+
+            var image: VkImage? = nil
+
+            guard vkCreateImage(self.device, &imageCreateInfo, nil, &image) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+
+            return VulkanImage(device: self.device,
+                                image: image!)
+        }
+    }
+
     public func createImageView(image: VulkanImage,
                                 viewType: VkImageViewType,
                                 format: VkFormat,

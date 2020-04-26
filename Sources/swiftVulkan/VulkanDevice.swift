@@ -105,14 +105,14 @@ public final class VulkanDevice {
     }
 
     public func createComputePipeline(pipelineCache: VulkanPipelineCache? = nil,
-                                      flags: VkPipelineCreateFlags,
+                                      flags: VkPipelineCreateFlags = 0,
                                       stage: VulkanPipelineShaderStage,
                                       layout: VulkanPipelineLayout,
                                       basePipelineHandle: VulkanPipeline? = nil,
                                       basePipelineIndex: Int = 0) -> VulkanPipeline {
         var computePipelineCreateInfo = VkComputePipelineCreateInfo()
 
-        computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+        computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO
         computePipelineCreateInfo.flags = flags
         computePipelineCreateInfo.stage = stage.getPipelineShaderStageCreateInfo()
         computePipelineCreateInfo.layout = layout.getPipelineLayout()

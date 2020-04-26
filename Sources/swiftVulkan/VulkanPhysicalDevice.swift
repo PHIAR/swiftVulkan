@@ -22,8 +22,12 @@ public final class VulkanPhysicalDevice {
         var shaderFloat16Int8Features = VkPhysicalDeviceShaderFloat16Int8FeaturesKHR()
 
         shaderFloat16Int8Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES_KHR
+
+    #if os(Android)
+    #else
         shaderFloat16Int8Features.shaderFloat16 = VkBool32(VK_TRUE)
         shaderFloat16Int8Features.shaderInt8 = VkBool32(VK_TRUE)
+    #endif
 
         return queuePriorities.withUnsafeBytes { _queuePriorities in
             let queueCreateInfos: [VkDeviceQueueCreateInfo] = queues.map {
@@ -38,7 +42,7 @@ public final class VulkanPhysicalDevice {
 
             let enabledLayerNames = layerNames.map { UnsafePointer(strdup($0.withCString { $0 })) }
             let enabledExtensionNames = extensions.map { UnsafePointer(strdup($0.withCString { $0 })) }
-        var _features = features
+            var _features = features
             let device: VulkanDevice = { (pNext: UnsafeRawPointer,
                                           queueCreateInfos: UnsafePointer <VkDeviceQueueCreateInfo>,
                                           enabledLayerNames: UnsafePointer <UnsafePointer <CChar>?>,

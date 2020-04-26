@@ -322,7 +322,7 @@ public final class VulkanCommandBuffer {
     }
 
     public func set(event: VulkanEvent,
-                    stage: VkPipelineStageFlags) {
+                    stage: VkPipelineStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT.rawValue) {
         vkCmdSetEvent(self.commandBuffer,
                       event.getEvent(),
                       stage)

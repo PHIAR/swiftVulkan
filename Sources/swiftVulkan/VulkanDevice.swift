@@ -188,7 +188,7 @@ public final class VulkanDevice {
     public func createEvent() -> VulkanEvent {
         var eventCreateInfo = VkEventCreateInfo()
 
-        eventCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+        eventCreateInfo.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO
 
         var event: VkEvent? = nil
 

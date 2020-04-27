@@ -338,7 +338,7 @@ public final class VulkanCommandBuffer {
                            values.baseAddress!)
     }
 
-    public func reset(flags: VkCommandBufferResetFlags) {
+    public func reset(flags: VkCommandBufferResetFlags = VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT.rawValue) {
         vkResetCommandBuffer(self.commandBuffer,
                              flags)
     }

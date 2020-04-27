@@ -142,6 +142,7 @@ public final class VulkanDevice {
 
             descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO
             descriptorPoolCreateInfo.flags = flags
+            descriptorPoolCreateInfo.maxSets = UInt32(maxSets)
             descriptorPoolCreateInfo.poolSizeCount = UInt32(poolSizes.count)
             descriptorPoolCreateInfo.pPoolSizes = _poolSizes.baseAddress!.assumingMemoryBound(to: VkDescriptorPoolSize.self)
 

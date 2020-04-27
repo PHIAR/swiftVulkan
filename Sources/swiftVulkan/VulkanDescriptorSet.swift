@@ -26,4 +26,20 @@ public final class VulkanDescriptorSet {
     public func getDescriptorSet() -> VkDescriptorSet {
         return self.descriptorSet
     }
+
+    public func writeDescriptorSet(dstBinding: Int,
+                                   descriptorType: VkDescriptorType,
+                                   bufferInfos: [VkDescriptorBufferInfo]) {
+        bufferInfos.withUnsafeBytes { _descriptorSets in
+            var writeDescriptorSet = VkWriteDescriptorSet()
+
+            writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET
+            writeDescriptorSet.dstSet = self.getDescriptorSet()
+            writeDescriptorSet.dstBinding = UInt32(dstBinding)
+            writeDescriptorSet.descriptorCount = UInt32(bufferInfos.count)
+            writeDescriptorSet.descriptorType = descriptorType
+            writeDescriptorSet.pBufferInfo = _descriptorSets.baseAddress!.assumingMemoryBound(to: VkDescriptorBufferInfo.self)
+            vkUpdateDescriptorSets(self.device, 1, &writeDescriptorSet, 0, nil)
+        }
+    }
 }

@@ -41,6 +41,28 @@ public final class VulkanCommandBuffer {
         }
     }
 
+    public func bindDescriptorSets(pipelineBindPoint: VkPipelineBindPoint,
+                                   pipelineLayout: VulkanPipelineLayout,
+                                   firstSet: Int = 0,
+                                   descriptorSets: [VulkanDescriptorSet],
+                                   dynamicOffsets: [Int] = []) {
+        let bindDescriptorSets = descriptorSets.map { $0.getDescriptorSet() }
+        let bindDynamicOffsets = dynamicOffsets.map { UInt32($0) }
+
+        bindDescriptorSets.withUnsafeBytes { _descriptorSets in
+            bindDynamicOffsets.withUnsafeBytes { _dynamicOffsets in
+                vkCmdBindDescriptorSets(self.commandBuffer,
+                                        pipelineBindPoint,
+                                        pipelineLayout.getPipelineLayout(),
+                                        UInt32(firstSet),
+                                        UInt32(descriptorSets.count),
+                                        _descriptorSets.baseAddress!.assumingMemoryBound(to: VkDescriptorSet?.self),
+                                        UInt32(dynamicOffsets.count),
+                                        _dynamicOffsets.baseAddress!.assumingMemoryBound(to: UInt32.self))
+            }
+        }
+    }
+
     public func bindIndexBuffer(buffer: VulkanBuffer,
                                 offset: Int,
                                 indexType: VkIndexType) {

@@ -2,7 +2,7 @@ import vulkan
 import Dispatch
 import Foundation
 
-open class VulkanVisualView {
+open class VulkanVisualLayer {
     private let device: VulkanDevice
     private let deviceQueue: VulkanQueue
     private let queueFamilyIndex: Int

@@ -8,5 +8,10 @@ module vulkan {
         header "vulkan_android.h"
         export *
     }
+
+    explicit module linux {
+        header "vulkan_linux.h"
+        export *
+    }
 }
 

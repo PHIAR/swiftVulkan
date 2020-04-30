@@ -12,6 +12,8 @@ module vulkan {
     explicit module linux {
         header "vulkan_linux.h"
         export *
+        link "xcb"
+        link "X11"
     }
 }
 

@@ -1,6 +1,23 @@
 import vulkan
 import Foundation
 
+public enum VulkanPipelineBindPoint {
+    case compute
+    case graphics
+}
+
+internal extension VulkanPipelineBindPoint {
+    func toVkPipelineBindPoint() -> VkPipelineBindPoint {
+        switch self {
+        case .compute:
+            return VK_PIPELINE_BIND_POINT_COMPUTE
+
+        case .graphics:
+            return VK_PIPELINE_BIND_POINT_GRAPHICS
+        }
+    }
+}
+
 public final class VulkanCommandBuffer {
     private let device: VulkanDevice
     private let commandBuffer: VkCommandBuffer
@@ -41,7 +58,7 @@ public final class VulkanCommandBuffer {
         }
     }
 
-    public func bindDescriptorSets(pipelineBindPoint: VkPipelineBindPoint,
+    public func bindDescriptorSets(pipelineBindPoint: VulkanPipelineBindPoint,
                                    pipelineLayout: VulkanPipelineLayout,
                                    firstSet: Int = 0,
                                    descriptorSets: [VulkanDescriptorSet],
@@ -52,7 +69,7 @@ public final class VulkanCommandBuffer {
         bindDescriptorSets.withUnsafeBytes { _descriptorSets in
             bindDynamicOffsets.withUnsafeBytes { _dynamicOffsets in
                 vkCmdBindDescriptorSets(self.commandBuffer,
-                                        pipelineBindPoint,
+                                        pipelineBindPoint.toVkPipelineBindPoint(),
                                         pipelineLayout.getPipelineLayout(),
                                         UInt32(firstSet),
                                         UInt32(descriptorSets.count),
@@ -72,10 +89,10 @@ public final class VulkanCommandBuffer {
                              indexType)
     }
 
-    public func bindPipeline(pipelineBindPoint: VkPipelineBindPoint,
+    public func bindPipeline(pipelineBindPoint: VulkanPipelineBindPoint,
                              pipeline: VulkanPipeline) {
         vkCmdBindPipeline(self.commandBuffer,
-                          pipelineBindPoint,
+                          pipelineBindPoint.toVkPipelineBindPoint(),
                           pipeline.getPipeline())
     }
 

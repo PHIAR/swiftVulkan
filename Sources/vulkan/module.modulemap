@@ -1,6 +1,5 @@
 module vulkan {
-    umbrella header "vulkan.h"
-    module * { export * }
+    header "vulkan.h"
     export *
     link "vulkan"
 
@@ -16,4 +15,3 @@ module vulkan {
         link "X11"
     }
 }
-

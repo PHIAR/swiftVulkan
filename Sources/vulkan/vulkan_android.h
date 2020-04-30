@@ -1,3 +1,5 @@
 #include <vulkan/vulkan.h>
-#include <vulkan/vulkan_android.h>
 
+#if defined(__ANDROID__)
+#include <vulkan/vulkan_android.h>
+#endif

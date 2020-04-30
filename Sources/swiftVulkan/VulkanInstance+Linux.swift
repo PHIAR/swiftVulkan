@@ -1,7 +1,7 @@
 import vulkan
 import Foundation
 
-#if os(Linux)
+#if !os(Android) && os(Linux)
 
 import vulkan.linux
 

@@ -451,8 +451,8 @@ public final class VulkanDevice {
     public func createSwapchain(surface: VulkanSurface,
                                 surfaceFormat: VkSurfaceFormatKHR,
                                 surfaceCapabilities: VkSurfaceCapabilitiesKHR,
+                                swapchainImageCount: Int,
                                 presentMode: VkPresentModeKHR) -> VulkanSwapchain {
-        let swapchainImageCount = surfaceCapabilities.minImageCount
         let swapchainExtent = surfaceCapabilities.currentExtent
         let swapchainImageFormat = (surfaceFormat.format == VK_FORMAT_UNDEFINED) ? VK_FORMAT_B8G8R8A8_UNORM :
                                                                                    surfaceFormat.format
@@ -460,7 +460,7 @@ public final class VulkanDevice {
 
         swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR
         swapchainCreateInfo.surface = surface.getSurface()
-        swapchainCreateInfo.minImageCount = swapchainImageCount
+        swapchainCreateInfo.minImageCount = UInt32(swapchainImageCount)
         swapchainCreateInfo.imageFormat = swapchainImageFormat
         swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace
         swapchainCreateInfo.imageExtent = swapchainExtent

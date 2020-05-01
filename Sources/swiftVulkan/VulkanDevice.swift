@@ -386,8 +386,8 @@ public final class VulkanDevice {
     }
 
     public func createRenderPass(attachments: [VkAttachmentDescription],
-                                subpasses: [VkSubpassDescription],
-                                dependencies: [VkSubpassDependency]) -> VulkanRenderPass {
+                                 subpasses: [VkSubpassDescription],
+                                 dependencies: [VkSubpassDependency]) -> VulkanRenderPass {
         var renderPass: VkRenderPass? = nil
 
         attachments.withUnsafeBytes { _attachments in

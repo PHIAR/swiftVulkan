@@ -366,6 +366,32 @@ public final class VulkanCommandBuffer {
         vkCmdSetBlendConstants(self.commandBuffer, blendConstants)
     }
 
+    public func set(depthBiasConstantFactor: Float,
+                    depthBiasClamp: Float,
+                    depthBiasSlopeFactor: Float) {
+        vkCmdSetDepthBias(self.commandBuffer,
+                          depthBiasConstantFactor,
+                          depthBiasClamp,
+                          depthBiasSlopeFactor)
+    }
+
+    public func set(deviceMask: UInt32) {
+        vkCmdSetDeviceMask(self.commandBuffer,
+                           deviceMask)
+    }
+
+    public func set(lineWidth: Float) {
+        vkCmdSetLineWidth(self.commandBuffer,
+                          lineWidth)
+    }
+
+    public func set(minDepthBounds: Float,
+                    maxDepthBounds: Float) {
+        vkCmdSetDepthBounds(self.commandBuffer,
+                            minDepthBounds,
+                            maxDepthBounds)
+    }
+
     public func set(event: VulkanEvent,
                     stage: VkPipelineStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT.rawValue) {
         vkCmdSetEvent(self.commandBuffer,
@@ -381,6 +407,27 @@ public final class VulkanCommandBuffer {
                             UInt32(scissors.count),
                             _scissors.baseAddress!.assumingMemoryBound(to: VkRect2D.self))
         }
+    }
+
+    public func setStencilCompareMask(faceMask: VkStencilFaceFlags,
+                                      compareMask: UInt32) {
+        vkCmdSetStencilCompareMask(self.commandBuffer,
+                                   faceMask,
+                                   compareMask)
+    }
+
+    public func setStencilReference(faceMask: VkStencilFaceFlags,
+                                    reference: UInt32) {
+        vkCmdSetStencilReference(self.commandBuffer,
+                                 faceMask,
+                                 reference)
+    }
+
+    public func setStencilReference(faceMask: VkStencilFaceFlags,
+                                    writeMask: UInt32) {
+        vkCmdSetStencilWriteMask(self.commandBuffer,
+                                 faceMask,
+                                 writeMask)
     }
 
     public func setViewport(firstViewport: Int = 0,

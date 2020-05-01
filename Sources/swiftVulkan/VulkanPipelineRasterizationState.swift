@@ -15,9 +15,9 @@ public final class VulkanPipelineRasterizationState {
 
     public init(depthClampEnable: Bool,
                 rasterizerDiscardEnable: Bool,
-                polygonMode: VkPolygonMode,
-                cullMode: VkCullModeFlags,
-                frontFace: VkFrontFace,
+                polygonMode: VulkanPolygonMode,
+                cullMode: VulkanCullModeFlags,
+                frontFace: VulkanFrontFace,
                 depthBiasEnable: Bool,
                 depthBiasConstantFactor: Float,
                 depthBiasClamp: Float,
@@ -25,9 +25,9 @@ public final class VulkanPipelineRasterizationState {
                 lineWidth: Float) {
         self.depthClampEnable = depthClampEnable
         self.rasterizerDiscardEnable = rasterizerDiscardEnable
-        self.polygonMode = polygonMode
-        self.cullMode = cullMode
-        self.frontFace = frontFace
+        self.polygonMode = polygonMode.toVkPolygonMode()
+        self.cullMode = cullMode.toVkCullModeFlags()
+        self.frontFace = frontFace.toVkFrontFace()
         self.depthBiasEnable = depthBiasEnable
         self.depthBiasConstantFactor = depthBiasConstantFactor
         self.depthBiasClamp = depthBiasClamp

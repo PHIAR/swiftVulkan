@@ -360,6 +360,12 @@ public final class VulkanCommandBuffer {
                              flags)
     }
 
+    public func set(blendConstants: [Float]) {
+        precondition(blendConstants.count == 4)
+
+        vkCmdSetBlendConstants(self.commandBuffer, blendConstants)
+    }
+
     public func set(event: VulkanEvent,
                     stage: VkPipelineStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT.rawValue) {
         vkCmdSetEvent(self.commandBuffer,

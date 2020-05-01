@@ -29,6 +29,11 @@ public final class VulkanPhysicalDevice {
         shaderFloat16Int8Features.shaderInt8 = VkBool32(VK_TRUE)
     #endif
 
+        var variablePointersFeatures = VkPhysicalDeviceVariablePointersFeatures()
+
+        variablePointersFeatures.variablePointersStorageBuffer = VkBool32(VK_TRUE)
+        variablePointersFeatures.variablePointers = VkBool32(VK_TRUE)
+
         return queuePriorities.withUnsafeBytes { _queuePriorities in
             let queueCreateInfos: [VkDeviceQueueCreateInfo] = queues.map {
                 var queueCreateInfo = VkDeviceQueueCreateInfo()
@@ -43,15 +48,18 @@ public final class VulkanPhysicalDevice {
             let enabledLayerNames = layerNames.map { UnsafePointer(strdup($0.withCString { $0 })) }
             let enabledExtensionNames = extensions.map { UnsafePointer(strdup($0.withCString { $0 })) }
             var _features = features
-            let device: VulkanDevice = { (pNext: UnsafeRawPointer,
+            let device: VulkanDevice = { (shaderFloat16Int8Features: UnsafeMutablePointer <VkPhysicalDeviceShaderFloat16Int8FeaturesKHR>,
+                                          variablePointersFeatures: UnsafeMutablePointer <VkPhysicalDeviceVariablePointersFeatures>,
                                           queueCreateInfos: UnsafePointer <VkDeviceQueueCreateInfo>,
                                           enabledLayerNames: UnsafePointer <UnsafePointer <CChar>?>,
                                           enabledExtensionNames: UnsafePointer <UnsafePointer <CChar>?>,
                                           features: UnsafePointer <VkPhysicalDeviceFeatures>) in
+                shaderFloat16Int8Features.pointee.pNext = UnsafeMutableRawPointer(variablePointersFeatures)
+
                 var deviceCreateInfo = VkDeviceCreateInfo()
 
                 deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO
-                deviceCreateInfo.pNext = pNext
+                deviceCreateInfo.pNext = UnsafeRawPointer(shaderFloat16Int8Features)
                 deviceCreateInfo.queueCreateInfoCount = UInt32(queues.count)
                 deviceCreateInfo.pQueueCreateInfos = queueCreateInfos
                 deviceCreateInfo.enabledLayerCount = UInt32(layerNames.count)
@@ -69,6 +77,7 @@ public final class VulkanPhysicalDevice {
                 return VulkanDevice(physicalDevice: self,
                                     device: device!)
             }(&shaderFloat16Int8Features,
+              &variablePointersFeatures,
               queueCreateInfos,
               enabledLayerNames,
               enabledExtensionNames,

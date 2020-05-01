@@ -244,6 +244,60 @@ public final class VulkanDevice {
                                  framebuffer: framebuffer!)
     }
 
+    public func createGraphicsPipeline(pipelineCache: VulkanPipelineCache? = nil,
+                                       stages: [VulkanPipelineShaderStage],
+                                       vertexInputState: VulkanPipelineVertexInputState,
+                                       inputAssemblyState: VulkanPipelineInputAssemblyState,
+                                       viewportState: VulkanPipelineViewportState,
+                                       rasterizationState: VulkanPipelineRasterizationState,
+                                       multisampleState: VulkanPipelineMultisampleState,
+                                       colorBlendState: VulkanPipelineColorBlendState,
+                                       dynamicState: VulkanPipelineDynamicState,
+                                       pipelineLayout: VulkanPipelineLayout,
+                                       renderPass: VulkanRenderPass,
+                                       subpass: Int = 0,
+                                       basePipelineHandle: VulkanPipeline? = nil,
+                                       basePipelineIndex: Int = 0) -> VulkanPipeline {
+        let _pipelineCache = pipelineCache?.getPipelineCache()
+        let pipelineStages = stages.map { $0.getPipelineShaderStageCreateInfo() }
+        var pipeline: VkPipeline? = nil
+        var _vertexInputState = vertexInputState.getPipelineVertexInputStateCreateInfo()
+        var _inputAssemblyState = inputAssemblyState.getPipelineInputAssemblyStateCreateInfo()
+        var _viewportState = viewportState.getPipelineViewportStateCreateInfo()
+        var _rasterizationState = rasterizationState.getPipelineRasterizationStateCreateInfo()
+        var _multisampleState = multisampleState.getPipelineMultisampleStateCreateInfo()
+        var _colorBlendState = colorBlendState.getPipelineColorBlendStateCreateInfo()
+        var _dynamicState = dynamicState.getPipelineDynamicStateCreateInfo()
+        let addressOf: (UnsafeRawPointer) -> UnsafeRawPointer = { $0 }
+
+        pipelineStages.withUnsafeBytes { _stages in
+            var graphicsPipelineCreateInfo = VkGraphicsPipelineCreateInfo()
+
+            graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO
+            graphicsPipelineCreateInfo.stageCount = UInt32(stages.count)
+            graphicsPipelineCreateInfo.pStages = _stages.baseAddress!.assumingMemoryBound(to: VkPipelineShaderStageCreateInfo.self)
+            graphicsPipelineCreateInfo.pVertexInputState = addressOf(&_vertexInputState).assumingMemoryBound(to: VkPipelineVertexInputStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pInputAssemblyState = addressOf(&_inputAssemblyState).assumingMemoryBound(to: VkPipelineInputAssemblyStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pViewportState = addressOf(&_viewportState).assumingMemoryBound(to: VkPipelineViewportStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pRasterizationState = addressOf(&_rasterizationState).assumingMemoryBound(to: VkPipelineRasterizationStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pMultisampleState = addressOf(&_multisampleState).assumingMemoryBound(to: VkPipelineMultisampleStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pColorBlendState = addressOf(&_colorBlendState).assumingMemoryBound(to: VkPipelineColorBlendStateCreateInfo.self)
+            graphicsPipelineCreateInfo.pDynamicState = addressOf(&_dynamicState).assumingMemoryBound(to: VkPipelineDynamicStateCreateInfo.self)
+            graphicsPipelineCreateInfo.layout = pipelineLayout.getPipelineLayout()
+            graphicsPipelineCreateInfo.renderPass = renderPass.getRenderPass()
+            graphicsPipelineCreateInfo.subpass = UInt32(subpass)
+            graphicsPipelineCreateInfo.basePipelineHandle = basePipelineHandle?.getPipeline()
+            graphicsPipelineCreateInfo.basePipelineIndex = Int32(basePipelineIndex)
+
+            guard vkCreateGraphicsPipelines(device, _pipelineCache, 1, &graphicsPipelineCreateInfo, nil, &pipeline) == VK_SUCCESS else {
+                preconditionFailure()
+            }
+        }
+
+        return VulkanPipeline(device: self.device,
+                              pipeline: pipeline!)
+    }
+
     public func createImage(flags: VkImageCreateFlags,
                             imageType: VulkanImageType,
                             format: VulkanFormat,
@@ -304,60 +358,6 @@ public final class VulkanDevice {
 
         return VulkanImageView(device: self.device,
                                imageView: imageView!)
-    }
-
-    public func createGraphicsPipeline(pipelineCache: VulkanPipelineCache? = nil,
-                                       stages: [VulkanPipelineShaderStage],
-                                       vertexInputState: VulkanPipelineVertexInputState,
-                                       inputAssemblyState: VulkanPipelineInputAssemblyState,
-                                       viewportState: VulkanPipelineViewportState,
-                                       rasterizationState: VulkanPipelineRasterizationState,
-                                       multisampleState: VulkanPipelineMultisampleState,
-                                       colorBlendState: VulkanPipelineColorBlendState,
-                                       dynamicState: VulkanPipelineDynamicState,
-                                       pipelineLayout: VulkanPipelineLayout,
-                                       renderPass: VulkanRenderPass,
-                                       subpass: Int = 0,
-                                       basePipelineHandle: VulkanPipeline? = nil,
-                                       basePipelineIndex: Int = 0) -> VulkanPipeline {
-        let _pipelineCache = pipelineCache?.getPipelineCache()
-        let pipelineStages = stages.map { $0.getPipelineShaderStageCreateInfo() }
-        var pipeline: VkPipeline? = nil
-        var _vertexInputState = vertexInputState.getPipelineVertexInputStateCreateInfo()
-        var _inputAssemblyState = inputAssemblyState.getPipelineInputAssemblyStateCreateInfo()
-        var _viewportState = viewportState.getPipelineViewportStateCreateInfo()
-        var _rasterizationState = rasterizationState.getPipelineRasterizationStateCreateInfo()
-        var _multisampleState = multisampleState.getPipelineMultisampleStateCreateInfo()
-        var _colorBlendState = colorBlendState.getPipelineColorBlendStateCreateInfo()
-        var _dynamicState = dynamicState.getPipelineDynamicStateCreateInfo()
-        let addressOf: (UnsafeRawPointer) -> UnsafeRawPointer = { $0 }
-
-        pipelineStages.withUnsafeBytes { _stages in
-            var graphicsPipelineCreateInfo = VkGraphicsPipelineCreateInfo()
-
-            graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO
-            graphicsPipelineCreateInfo.stageCount = UInt32(stages.count)
-            graphicsPipelineCreateInfo.pStages = _stages.baseAddress!.assumingMemoryBound(to: VkPipelineShaderStageCreateInfo.self)
-            graphicsPipelineCreateInfo.pVertexInputState = addressOf(&_vertexInputState).assumingMemoryBound(to: VkPipelineVertexInputStateCreateInfo.self)
-            graphicsPipelineCreateInfo.pInputAssemblyState = addressOf(&_inputAssemblyState).assumingMemoryBound(to: VkPipelineInputAssemblyStateCreateInfo.self)
-            graphicsPipelineCreateInfo.pViewportState = addressOf(&_viewportState).assumingMemoryBound(to: VkPipelineViewportStateCreateInfo.self)
-            graphicsPipelineCreateInfo.pRasterizationState = addressOf(&_rasterizationState).assumingMemoryBound(to: VkPipelineRasterizationStateCreateInfo.self)
-            graphicsPipelineCreateInfo.pMultisampleState = addressOf(&_multisampleState).assumingMemoryBound(to: VkPipelineMultisampleStateCreateInfo.self)
-            graphicsPipelineCreateInfo.pColorBlendState = addressOf(&_colorBlendState).assumingMemoryBound(to: VkPipelineColorBlendStateCreateInfo.self)
-            graphicsPipelineCreateInfo.pDynamicState = addressOf(&_dynamicState).assumingMemoryBound(to: VkPipelineDynamicStateCreateInfo.self)
-            graphicsPipelineCreateInfo.layout = pipelineLayout.getPipelineLayout()
-            graphicsPipelineCreateInfo.renderPass = renderPass.getRenderPass()
-            graphicsPipelineCreateInfo.subpass = UInt32(subpass)
-            graphicsPipelineCreateInfo.basePipelineHandle = basePipelineHandle?.getPipeline()
-            graphicsPipelineCreateInfo.basePipelineIndex = Int32(basePipelineIndex)
-
-            guard vkCreateGraphicsPipelines(device, _pipelineCache, 1, &graphicsPipelineCreateInfo, nil, &pipeline) == VK_SUCCESS else {
-                preconditionFailure()
-            }
-        }
-
-        return VulkanPipeline(device: self.device,
-                              pipeline: pipeline!)
     }
 
     public func createPipelineLayout(descriptorSetLayouts: [VulkanDescriptorSetLayout],

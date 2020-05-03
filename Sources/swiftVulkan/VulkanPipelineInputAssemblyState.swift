@@ -5,9 +5,9 @@ public final class VulkanPipelineInputAssemblyState {
     private let topology: VkPrimitiveTopology
     private let primitiveRestartEnable: Bool
 
-    public init(topology: VkPrimitiveTopology,
+    public init(topology: VulkanPrimitiveTopology,
                 primitiveRestartEnable: Bool) {
-        self.topology = topology
+        self.topology = topology.toVkPrimitiveTopology()
         self.primitiveRestartEnable = primitiveRestartEnable
     }
 

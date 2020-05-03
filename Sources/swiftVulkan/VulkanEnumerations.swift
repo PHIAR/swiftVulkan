@@ -111,3 +111,52 @@ internal extension VulkanPolygonMode {
         }
     }
 }
+
+public enum VulkanPrimitiveTopology {
+    case lineList
+    case lineListWithAdjacency
+    case lineStrip
+    case lineStripWithAdjacency
+    case pointList
+    case triangleList
+    case triangleListWithAdjacency
+    case triangleFan
+    case triangleStrip
+    case triangleStripWithAdjacency
+}
+
+internal extension VulkanPrimitiveTopology {
+    func toVkPrimitiveTopology() -> VkPrimitiveTopology {
+        switch self {
+        case .lineList:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_LIST
+
+        case .lineListWithAdjacency:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY
+
+        case .lineStrip:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP
+
+        case .lineStripWithAdjacency:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY
+
+        case .pointList:
+            return VK_PRIMITIVE_TOPOLOGY_POINT_LIST
+
+        case .triangleList:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+
+        case .triangleListWithAdjacency:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY
+
+        case .triangleFan:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN
+
+        case .triangleStrip:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP
+
+        case .triangleStripWithAdjacency:
+            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY
+        }
+    }
+}

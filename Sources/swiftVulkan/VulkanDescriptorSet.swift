@@ -29,17 +29,33 @@ public final class VulkanDescriptorSet {
 
     public func writeDescriptorSet(dstBinding: Int,
                                    descriptorType: VkDescriptorType,
-                                   bufferInfos: [VkDescriptorBufferInfo]) {
-        bufferInfos.withUnsafeBytes { _descriptorSets in
-            var writeDescriptorSet = VkWriteDescriptorSet()
+                                   bufferInfos: [VkDescriptorBufferInfo] = [],
+                                   imageInfos: [VkDescriptorImageInfo] = []) {
+        let descriptorCount: UInt32
 
-            writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET
-            writeDescriptorSet.dstSet = self.getDescriptorSet()
-            writeDescriptorSet.dstBinding = UInt32(dstBinding)
-            writeDescriptorSet.descriptorCount = UInt32(bufferInfos.count)
-            writeDescriptorSet.descriptorType = descriptorType
-            writeDescriptorSet.pBufferInfo = _descriptorSets.baseAddress!.assumingMemoryBound(to: VkDescriptorBufferInfo.self)
-            vkUpdateDescriptorSets(self.device, 1, &writeDescriptorSet, 0, nil)
+        switch descriptorType {
+        case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+            descriptorCount = UInt32(imageInfos.count)
+
+        case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+            descriptorCount = UInt32(bufferInfos.count)
+
+        default:
+            preconditionFailure()
+        }
+
+        bufferInfos.withUnsafeBytes { _descriptorSets in
+            imageInfos.withUnsafeBytes { _imageInfos in
+                var writeDescriptorSet = VkWriteDescriptorSet()
+
+                writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET
+                writeDescriptorSet.dstSet = self.getDescriptorSet()
+                writeDescriptorSet.dstBinding = UInt32(dstBinding)
+                writeDescriptorSet.descriptorCount = descriptorCount
+                writeDescriptorSet.descriptorType = descriptorType
+                writeDescriptorSet.pBufferInfo = _descriptorSets.baseAddress!.assumingMemoryBound(to: VkDescriptorBufferInfo.self)
+                vkUpdateDescriptorSets(self.device, 1, &writeDescriptorSet, 0, nil)
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ public enum VulkanAttachmentLoadOp {
     case load
 }
 
-internal extension VulkanAttachmentLoadOp {
+public extension VulkanAttachmentLoadOp {
     func toVkAttachmentLoadOp() -> VkAttachmentLoadOp {
         switch self {
         case .clear:
@@ -26,8 +26,8 @@ public enum VulkanAttachmentStoreOp {
     case store
 }
 
-internal extension VulkanAttachmentStoreOp {
-    func toVkAttachmentLoadOp() -> VkAttachmentStoreOp {
+public extension VulkanAttachmentStoreOp {
+    func toVkAttachmentStoreOp() -> VkAttachmentStoreOp {
         switch self {
         case .dontCare:
             return VK_ATTACHMENT_STORE_OP_DONT_CARE

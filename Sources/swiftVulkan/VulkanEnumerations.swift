@@ -1,5 +1,43 @@
 import vulkan
 
+public enum VulkanAttachmentLoadOp {
+    case clear
+    case dontCare
+    case load
+}
+
+internal extension VulkanAttachmentLoadOp {
+    func toVkAttachmentLoadOp() -> VkAttachmentLoadOp {
+        switch self {
+        case .clear:
+            return VK_ATTACHMENT_LOAD_OP_CLEAR
+
+        case .dontCare:
+            return VK_ATTACHMENT_LOAD_OP_DONT_CARE
+
+        case .load:
+            return VK_ATTACHMENT_LOAD_OP_LOAD
+        }
+    }
+}
+
+public enum VulkanAttachmentStoreOp {
+    case dontCare
+    case store
+}
+
+internal extension VulkanAttachmentStoreOp {
+    func toVkAttachmentLoadOp() -> VkAttachmentStoreOp {
+        switch self {
+        case .dontCare:
+            return VK_ATTACHMENT_STORE_OP_DONT_CARE
+
+        case .store:
+            return VK_ATTACHMENT_STORE_OP_STORE
+        }
+    }
+}
+
 public enum VulkanCullModeFlags {
     case none
     case front

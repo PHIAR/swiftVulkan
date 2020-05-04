@@ -348,16 +348,16 @@ public final class VulkanDevice {
     }
 
     public func createImageView(image: VulkanImage,
-                                viewType: VkImageViewType,
-                                format: VkFormat,
+                                viewType: VulkanImageViewType,
+                                format: VulkanFormat,
                                 subresourceRange: VkImageSubresourceRange) -> VulkanImageView {
         var imageView: VkImageView? = nil
         var imageCreateInfo = VkImageViewCreateInfo()
 
         imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO
         imageCreateInfo.image = image.getImage()
-        imageCreateInfo.viewType = viewType
-        imageCreateInfo.format = format
+        imageCreateInfo.viewType = viewType.toVkImageViewType()
+        imageCreateInfo.format = format.toVkFormat()
         imageCreateInfo.subresourceRange = subresourceRange
 
         guard vkCreateImageView(self.device, &imageCreateInfo, nil, &imageView) == VK_SUCCESS else {

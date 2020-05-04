@@ -39,11 +39,11 @@ public final class VulkanCommandBuffer {
         }
     }
 
-    public func beginRenderPass(_ renderPass: VulkanRenderPass,
-                                  framebuffer: VulkanFramebuffer,
-                                  renderArea: VkRect2D,
-                                  clearValues: [VkClearValue],
-                                  contents: VkSubpassContents) {
+    public func beginRenderPass(renderPass: VulkanRenderPass,
+                                framebuffer: VulkanFramebuffer,
+                                renderArea: VkRect2D,
+                                clearValues: [VkClearValue],
+                                contents: VkSubpassContents = VK_SUBPASS_CONTENTS_INLINE) {
         clearValues.withUnsafeBytes { _clearValues in
             var renderPassBeginInfo = VkRenderPassBeginInfo()
 

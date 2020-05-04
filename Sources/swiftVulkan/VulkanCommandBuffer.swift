@@ -82,11 +82,11 @@ public final class VulkanCommandBuffer {
 
     public func bindIndexBuffer(buffer: VulkanBuffer,
                                 offset: Int,
-                                indexType: VkIndexType) {
+                                indexType: VulkanIndexType) {
         vkCmdBindIndexBuffer(self.commandBuffer,
                              buffer.getBuffer(),
                              VkDeviceSize(offset),
-                             indexType)
+                             indexType.toVkIndexType())
     }
 
     public func bindPipeline(pipelineBindPoint: VulkanPipelineBindPoint,

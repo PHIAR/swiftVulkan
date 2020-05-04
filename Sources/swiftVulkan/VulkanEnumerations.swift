@@ -401,6 +401,23 @@ internal extension VulkanImageViewType {
     }
 }
 
+public enum VulkanIndexType {
+    case uInt16
+    case uInt32
+}
+
+internal extension VulkanIndexType {
+    func toVkIndexType() -> VkIndexType {
+        switch self {
+        case .uInt16:
+            return VK_INDEX_TYPE_UINT16
+
+        case .uInt32:
+            return VK_INDEX_TYPE_UINT32
+        }
+    }
+}
+
 public enum VulkanPolygonMode {
     case fill
     case fillRectangle

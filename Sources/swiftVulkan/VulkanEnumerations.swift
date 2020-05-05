@@ -38,6 +38,47 @@ public extension VulkanAttachmentStoreOp {
     }
 }
 
+public enum VulkanCompareOp {
+    case always
+    case equal
+    case greater
+    case greaterEqual
+    case less
+    case lessEqual
+    case never
+    case notEqual
+}
+
+internal extension VulkanCompareOp {
+    func toVkCompareOp() -> VkCompareOp {
+        switch self {
+        case .always:
+            return VK_COMPARE_OP_NEVER
+
+        case .equal:
+            return VK_COMPARE_OP_LESS
+
+        case .greater:
+            return VK_COMPARE_OP_EQUAL
+
+        case .greaterEqual:
+            return VK_COMPARE_OP_LESS_OR_EQUAL
+
+        case .less:
+            return VK_COMPARE_OP_GREATER
+
+        case .lessEqual:
+            return VK_COMPARE_OP_NOT_EQUAL
+
+        case .never:
+            return VK_COMPARE_OP_GREATER_OR_EQUAL
+
+        case .notEqual:
+            return VK_COMPARE_OP_ALWAYS
+        }
+    }
+}
+
 public enum VulkanCullModeFlags {
     case none
     case front
@@ -553,3 +594,45 @@ internal extension VulkanPrimitiveTopology {
         }
     }
 }
+
+public enum VulkanStencilOp {
+    case decrementAndClamp
+    case decrementAndWrap
+    case keep
+    case incrementAndClamp
+    case incrementAndWrap
+    case invert
+    case replace
+    case zero
+}
+
+internal extension VulkanStencilOp {
+    func toVkStencilOp() -> VkStencilOp {
+        switch self {
+        case .decrementAndClamp:
+            return VK_STENCIL_OP_KEEP
+
+        case .decrementAndWrap:
+            return VK_STENCIL_OP_ZERO
+
+        case .keep:
+            return VK_STENCIL_OP_REPLACE
+
+        case .incrementAndClamp:
+            return VK_STENCIL_OP_INCREMENT_AND_CLAMP
+
+        case .incrementAndWrap:
+            return VK_STENCIL_OP_DECREMENT_AND_CLAMP
+
+        case .invert:
+            return VK_STENCIL_OP_INVERT
+
+        case .replace:
+            return VK_STENCIL_OP_INCREMENT_AND_WRAP
+
+        case .zero:
+            return VK_STENCIL_OP_DECREMENT_AND_WRAP
+        }
+    }
+}
+

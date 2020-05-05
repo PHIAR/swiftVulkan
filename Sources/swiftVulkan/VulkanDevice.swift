@@ -251,6 +251,7 @@ public final class VulkanDevice {
                                        viewportState: VulkanPipelineViewportState,
                                        rasterizationState: VulkanPipelineRasterizationState,
                                        multisampleState: VulkanPipelineMultisampleState,
+                                       depthStencilState: VulkanPipelineDepthStencilState,
                                        colorBlendState: VulkanPipelineColorBlendState,
                                        dynamicStates: [VulkanDynamicState],
                                        pipelineLayout: VulkanPipelineLayout,
@@ -266,6 +267,7 @@ public final class VulkanDevice {
         var _viewportState = viewportState.getPipelineViewportStateCreateInfo()
         var _rasterizationState = rasterizationState.getPipelineRasterizationStateCreateInfo()
         var _multisampleState = multisampleState.getPipelineMultisampleStateCreateInfo()
+        var _depthStencilState = depthStencilState.getPipelineDepthStencilStateCreateInfo()
         var _colorBlendState = colorBlendState.getPipelineColorBlendStateCreateInfo()
         let piplelineDynamicStates = dynamicStates.map { $0.toVkDynamicState() }
         let addressOf: (UnsafeRawPointer) -> UnsafeRawPointer = { $0 }
@@ -288,6 +290,7 @@ public final class VulkanDevice {
                 graphicsPipelineCreateInfo.pViewportState = addressOf(&_viewportState).assumingMemoryBound(to: VkPipelineViewportStateCreateInfo.self)
                 graphicsPipelineCreateInfo.pRasterizationState = addressOf(&_rasterizationState).assumingMemoryBound(to: VkPipelineRasterizationStateCreateInfo.self)
                 graphicsPipelineCreateInfo.pMultisampleState = addressOf(&_multisampleState).assumingMemoryBound(to: VkPipelineMultisampleStateCreateInfo.self)
+                graphicsPipelineCreateInfo.pDepthStencilState = addressOf(&_depthStencilState).assumingMemoryBound(to: VkPipelineDepthStencilStateCreateInfo.self)
                 graphicsPipelineCreateInfo.pColorBlendState = addressOf(&_colorBlendState).assumingMemoryBound(to: VkPipelineColorBlendStateCreateInfo.self)
                 graphicsPipelineCreateInfo.pDynamicState = addressOf(&dynamicStateCreateInfo).assumingMemoryBound(to: VkPipelineDynamicStateCreateInfo.self)
                 graphicsPipelineCreateInfo.layout = pipelineLayout.getPipelineLayout()

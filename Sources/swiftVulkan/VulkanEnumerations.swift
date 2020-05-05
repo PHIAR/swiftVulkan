@@ -343,6 +343,68 @@ public extension VulkanFormat {
     }
 }
 
+public enum VulkanImageLayout {
+    case undefined
+    case general
+    case colorAttachmentOptimal
+    case depthStencilAttachmentOptimal
+    case depthStencilReadOnlyOptimal
+    case shaderReadOnlyOptimal
+    case transferSrcOptimal
+    case transferDstOptimal
+    case preinitialized
+    case depthReadOnlyStencilAttachmentOptimal
+    case depthAttachmentStencilReadOnlyOptimal
+    case presentSrcKHR
+    case sharedPresentKHR
+}
+
+internal extension VulkanImageLayout {
+    func toVkImageLayout() -> VkImageLayout {
+        switch self {
+        case .undefined:
+            return VK_IMAGE_LAYOUT_UNDEFINED
+
+        case .general:
+            return VK_IMAGE_LAYOUT_GENERAL
+
+        case .colorAttachmentOptimal:
+            return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+
+        case .depthStencilAttachmentOptimal:
+            return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+
+        case .depthStencilReadOnlyOptimal:
+            return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+
+        case .shaderReadOnlyOptimal:
+            return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+
+        case .transferSrcOptimal:
+            return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+
+        case .transferDstOptimal:
+            return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+
+        case .preinitialized:
+            return VK_IMAGE_LAYOUT_PREINITIALIZED
+
+        case .depthReadOnlyStencilAttachmentOptimal:
+            return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL
+
+        case .depthAttachmentStencilReadOnlyOptimal:
+            return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL
+
+        case .presentSrcKHR:
+            return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+
+        case .sharedPresentKHR:
+            return VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR
+
+        }
+    }
+}
+
 public enum VulkanImageType {
     case type1D
     case type2D

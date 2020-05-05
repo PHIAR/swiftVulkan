@@ -11,14 +11,14 @@ public final class VulkanImageMemoryBarrier: VulkanMemoryBarrier {
 
     public init(srcAccessMask: VkAccessFlags,
                 dstAccessMask: VkAccessFlags,
-                oldLayout: VkImageLayout,
-                newLayout: VkImageLayout,
+                oldLayout: VulkanImageLayout,
+                newLayout: VulkanImageLayout,
                 srcQueueFamilyIndex: Int,
                 dstQueueFamilyIndex: Int,
                 image: VulkanImage,
                 subresourceRange: VkImageSubresourceRange) {
-        self.oldLayout = oldLayout
-        self.newLayout = newLayout
+        self.oldLayout = oldLayout.toVkImageLayout()
+        self.newLayout = newLayout.toVkImageLayout()
         self.srcQueueFamilyIndex = srcQueueFamilyIndex
         self.dstQueueFamilyIndex = dstQueueFamilyIndex
         self.image = image

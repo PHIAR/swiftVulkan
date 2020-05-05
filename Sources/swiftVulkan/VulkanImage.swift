@@ -28,4 +28,13 @@ public final class VulkanImage {
     public func getImage() -> VkImage {
         return self.image
     }
+
+    public func getImageMemoryRequirements() -> VkMemoryRequirements {
+        var memoryRequirements = VkMemoryRequirements()
+
+        vkGetImageMemoryRequirements(self.device,
+                                     self.image,
+                                     &memoryRequirements)
+        return memoryRequirements
+    }
 }

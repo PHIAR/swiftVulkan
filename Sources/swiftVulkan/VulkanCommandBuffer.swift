@@ -164,42 +164,42 @@ public final class VulkanCommandBuffer {
 
     public func copyBufferToImage(srcBuffer: VulkanBuffer,
                                   dstImage: VulkanImage,
-                                  dstImageLayout: VkImageLayout,
+                                  dstImageLayout: VulkanImageLayout,
                                   regions: [VkBufferImageCopy]) {
         regions.withUnsafeBytes { _regions in
             vkCmdCopyBufferToImage(self.commandBuffer,
                                    srcBuffer.getBuffer(),
                                    dstImage.getImage(),
-                                   dstImageLayout,
+                                   dstImageLayout.toVkImageLayout(),
                                    UInt32(regions.count),
                                   _regions.baseAddress!.assumingMemoryBound(to: VkBufferImageCopy.self))
         }
     }
 
     public func copyImage(srcImage: VulkanImage,
-                          srcImageLayout: VkImageLayout,
+                          srcImageLayout: VulkanImageLayout,
                           dstImage: VulkanImage,
-                          dstImageLayout: VkImageLayout,
+                          dstImageLayout: VulkanImageLayout,
                           regions: [VkImageCopy]) {
         regions.withUnsafeBytes { _regions in
             vkCmdCopyImage(self.commandBuffer,
                            srcImage.getImage(),
-                           srcImageLayout,
+                           srcImageLayout.toVkImageLayout(),
                            dstImage.getImage(),
-                           dstImageLayout,
+                           dstImageLayout.toVkImageLayout(),
                            UInt32(regions.count),
                            _regions.baseAddress!.assumingMemoryBound(to: VkImageCopy.self))
         }
     }
 
     public func copyImageToBuffer(srcImage: VulkanImage,
-                                  srcImageLayout: VkImageLayout,
+                                  srcImageLayout: VulkanImageLayout,
                                   dstBuffer: VulkanBuffer,
                                   regions: [VkBufferImageCopy]) {
         regions.withUnsafeBytes { _regions in
             vkCmdCopyImageToBuffer(self.commandBuffer,
                                    srcImage.getImage(),
-                                   srcImageLayout,
+                                   srcImageLayout.toVkImageLayout(),
                                    dstBuffer.getBuffer(),
                                    UInt32(regions.count),
                                    _regions.baseAddress!.assumingMemoryBound(to: VkBufferImageCopy.self))

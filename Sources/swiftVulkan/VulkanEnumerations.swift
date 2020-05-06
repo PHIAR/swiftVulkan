@@ -166,7 +166,6 @@ internal extension VulkanFrontFace {
     }
 }
 
-
 public enum VulkanFormat {
     case undefined
     case a2r10g10b10SNormPack32

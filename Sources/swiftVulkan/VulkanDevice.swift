@@ -223,8 +223,9 @@ public final class VulkanDevice {
                                   height: Int,
                                   layers: Int = 1) -> VulkanFramebuffer {
         var framebuffer: VkFramebuffer? = nil
+        let framebufferImageViews = imageViews.map { $0.getImageView() }
 
-        imageViews.withUnsafeBytes { _imageViews in
+        framebufferImageViews.withUnsafeBytes { _imageViews in
             var framebufferCreateInfo = VkFramebufferCreateInfo()
 
             framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO

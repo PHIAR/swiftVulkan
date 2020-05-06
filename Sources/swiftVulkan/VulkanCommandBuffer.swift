@@ -134,7 +134,7 @@ public final class VulkanCommandBuffer {
     }
 
     public func clearColor(image: VulkanImage,
-                           imageLayout: VkImageLayout,
+                           imageLayout: VulkanImageLayout,
                            color: VkClearColorValue,
                            ranges: [VkImageSubresourceRange]) {
         ranges.withUnsafeBytes { _ranges in
@@ -143,7 +143,7 @@ public final class VulkanCommandBuffer {
 
             vkCmdClearColorImage(self.commandBuffer,
                                  _image,
-                                 imageLayout,
+                                 imageLayout.toVkImageLayout(),
                                  &_color,
                                  UInt32(ranges.count),
                                  _ranges.baseAddress!.assumingMemoryBound(to: VkImageSubresourceRange.self))

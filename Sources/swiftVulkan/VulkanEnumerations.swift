@@ -166,6 +166,7 @@ internal extension VulkanFrontFace {
     }
 }
 
+
 public enum VulkanFormat {
     case undefined
     case a2r10g10b10SNormPack32
@@ -399,7 +400,7 @@ public enum VulkanImageLayout {
     case sharedPresentKHR
 }
 
-internal extension VulkanImageLayout {
+public extension VulkanImageLayout {
     func toVkImageLayout() -> VkImageLayout {
         switch self {
         case .undefined:

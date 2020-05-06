@@ -398,12 +398,13 @@ public final class VulkanDevice {
     }
 
     public func createRenderPass(attachments: [VkAttachmentDescription],
-                                 subpasses: [VkSubpassDescription],
+                                 subpasses: [VulkanSubpassDescription],
                                  dependencies: [VkSubpassDependency]) -> VulkanRenderPass {
         var renderPass: VkRenderPass? = nil
+        let renderSubpasses = subpasses.map { $0.getVkSubpassDescription() }
 
         attachments.withUnsafeBytes { _attachments in
-            subpasses.withUnsafeBytes { _subpasses in
+            renderSubpasses.withUnsafeBytes { _subpasses in
                 dependencies.withUnsafeBytes { _dependencies in
                     var renderPassCreateInfo = VkRenderPassCreateInfo()
 

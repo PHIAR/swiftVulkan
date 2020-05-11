@@ -2,8 +2,15 @@
 
 import PackageDescription
 
+let platforms: [SupportedPlatform] = [
+    .iOS("13.2"),
+    .macOS("10.15"),
+    .tvOS("13.2")
+]
+
 let package = Package(
     name: "swiftVulkan",
+    platforms: platforms,
     products: [
         .library(name: "swiftVulkan",
                  type: .dynamic,

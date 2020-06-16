@@ -376,8 +376,10 @@ public final class VulkanCommandBuffer {
     }
 
     public func set(deviceMask: UInt32) {
+    #if os(Android) || os(Linux)
         vkCmdSetDeviceMask(self.commandBuffer,
                            deviceMask)
+    #endif
     }
 
     public func set(lineWidth: Float) {
